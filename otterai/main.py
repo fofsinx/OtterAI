@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class CodeReviewComment(BaseModel):
     path: str = Field(description="File path where the comment should be added")
     line: int = Field(description="Line number in the file where the comment should be added", gt=0)
-    body: str = Field(description="The review comment with emoji category and specific feedback")
+    body: Optional[str] = Field(description="The review comment with emoji category and specific feedback", default="")
 
     @field_validator('line')
     def line_must_be_positive(cls, v):
@@ -325,6 +325,8 @@ Diff to review:
                             logging.warning(f"⚠️ Invalid line {comment.line} in {file['file']}")
                     else:
                         logging.warning(f"⚠️ Rejected invalid line {comment.line} for file {file['file']}")
+                    if comment.body == "":
+                        logging.warning(f"⚠️ Rejected empty comment for file {file['file']}")
                 
                 comments.extend(valid_comments)
                 if result.comments_to_delete:
