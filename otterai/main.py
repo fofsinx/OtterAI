@@ -370,6 +370,11 @@ def main():
     g = Github(github_token)
     repo = g.get_repo(repo)
     pr = repo.get_pull(pr_number)
+
+    if pr.state == 'merged':
+        logging.info("🦦 PR is merged, skipping code review")
+        pr.create_comment("🦦 PR is merged, skipping code review")
+        return
     
     # Delete comments first
     for comment_id in comments_to_delete:
