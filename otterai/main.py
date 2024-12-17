@@ -194,6 +194,16 @@ def clean_json_string(json_str: str) -> str:
     # Remove any markdown code block markers
     json_str = re.sub(r'```json\s*|\s*```', '', json_str)
     
+    # Handle case where response starts with "comments"
+    if json_str.lstrip().startswith('"comments"'):
+        json_str = '{' + json_str + '}'
+    
+    # Handle case where response starts with newline and "comments"
+    if json_str.lstrip().startswith('\n'):
+        json_str = json_str.lstrip()
+        if json_str.startswith('"comments"'):
+            json_str = '{' + json_str + '}'
+    
     # Ensure the string starts with a curly brace
     if not json_str.startswith('{'):
         json_str = '{' + json_str
@@ -202,16 +212,22 @@ def clean_json_string(json_str: str) -> str:
     if not json_str.endswith('}'):
         json_str = json_str + '}'
     
-    # Fix any truncated JSON
+    # Fix any truncated JSON by balancing braces
     if json_str.count('{') != json_str.count('}'):
-        # Try to complete the JSON structure
         missing_braces = json_str.count('{') - json_str.count('}')
         if missing_braces > 0:
             json_str += '}' * missing_braces
         else:
             json_str = '{' * abs(missing_braces) + json_str
-            
-    return json_str
+    
+    # Attempt to fix common formatting issues
+    try:
+        # Parse and re-stringify to ensure valid JSON
+        parsed = json.loads(json_str)
+        return json.dumps(parsed)
+    except json.JSONDecodeError:
+        # If parsing fails, return the cleaned string
+        return json_str
 
 def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
     """Review code changes using LangChain and OpenAI."""
