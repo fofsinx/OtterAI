@@ -1,6 +1,10 @@
-name: 'OtterAI Code Review'
-description: 'AI-powered code review that adds comments to your pull requests'
-author: 'OtterAI'
+name: '🦦 Dr. OtterAI Code Review, PhD'
+description: '🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using OpenAI''s GPT models. Created by a very smart otter with multiple degrees in Computer Science! 🎓'
+author: 'fofsinx'
+
+branding:
+  icon: 'code'
+  color: 'yellow'
 
 inputs:
   openai_api_key:
