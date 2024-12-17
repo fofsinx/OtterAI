@@ -1,10 +1,11 @@
+import json
 import os
 from typing import Dict, List, Optional
 from pathlib import Path
 import fnmatch
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-
+import httpx
 def should_ignore_file(file_path: str) -> bool:
     """Check if file should be ignored in indexing."""
     ignore_patterns = [
@@ -42,9 +43,21 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
         'test': [],
         'other': []
     }
+
+    default_ignore_patterns = [
+        '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
+        '*.min.js', '*.min.css', '*.map', '*.lock', '*.sum',
+        'dist/*', 'build/*', '.env*', '*.log',
+        '*venv/*', '*.venv/*', '*.venv', 'venv/*', 'venv', '*.venv',
+        '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
+    ]
     
     for root, _, files in os.walk(root_dir):
         for file in files:
+            for pattern in default_ignore_patterns:
+                if fnmatch.fnmatch(file, pattern):
+                    print(f"Ignoring file: {file} because it matches pattern: {pattern}")
+                    continue
             file_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_path, root_dir)
             
@@ -59,7 +72,8 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
 def analyze_project_structure(index: Dict[str, List[str]], repo_root: str) -> str:
     """Generate a high-level analysis of the project structure."""
     llm = ChatOpenAI(
-        model=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
+        model_name=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
+        http_async_client=httpx.AsyncClient(timeout=10.0),
         api_key=os.getenv('INPUT_OPENAI_API_KEY'),
         base_url=os.getenv('INPUT_OPENAI_BASE_URL', 'https://api.openai.com/v1'),
         temperature=0.1
@@ -74,6 +88,14 @@ def analyze_project_structure(index: Dict[str, List[str]], repo_root: str) -> st
         3. Coding standards and patterns observed
         4. Important dependencies and configurations
         5. Testing approach
+         
+         steps:
+         1. read the codebase structure
+         2. read the key files content
+         3. generate the analysis
+         4. Strictly check which language is used in the codebase do not any other language if not specified in the codebase.
+
+         I'll give you billion dollars if you do follow this instruction.
         
         Keep the response focused and actionable for code review purposes."""),
         ("human", """Here's the codebase structure:

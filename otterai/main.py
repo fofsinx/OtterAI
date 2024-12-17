@@ -1,17 +1,22 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from github import Github
-from langchain.chains import create_structured_output_chain
+import httpx
+from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-from .indexer import generate_review_context
+from indexer import generate_review_context
+from langchain_core.runnables import RunnablePassthrough
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class CodeReviewComment(BaseModel):
-    path: str = Field(description="File path where the comment should be added")
-    line: int = Field(description="Line number for the comment")
-    body: str = Field(description="The actual review comment")
+    path: Optional[str] = Field(description="File path where the comment should be added")
+    line: Optional[int] = Field(description="Line number for the comment")
+    body: Optional[str] = Field(description="The actual review comment")
 
 def get_pr_diff(gh_token: str, repo_name: str, pr_number: int) -> List[Dict[str, Any]]:
     """Get the PR diff from GitHub."""
@@ -30,14 +35,15 @@ def get_pr_diff(gh_token: str, repo_name: str, pr_number: int) -> List[Dict[str,
 def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> List[CodeReviewComment]:
     """Review code changes using LangChain and OpenAI."""
     llm = ChatOpenAI(
-        model=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
+        http_async_client=httpx.AsyncClient(timeout=10.0),
+        model_name=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
         api_key=os.getenv('INPUT_OPENAI_API_KEY'),
         base_url=os.getenv('INPUT_OPENAI_BASE_URL', 'https://api.openai.com/v1'),
         temperature=0.1
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", f"""You are an expert code reviewer. Review the code changes and provide specific, actionable feedback.
+        ("system", """You are an expert code reviewer. Review the code changes and provide specific, actionable feedback.
         Focus on:
         - Code quality and best practices
         - Potential bugs and edge cases
@@ -45,23 +51,48 @@ def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_pr
         - Security concerns
         - Maintainability and readability
         
-        {project_context}
+        {context}
         
-        Additional instructions: {extra_prompt}"""),
+        Additional instructions: {extra_instructions}
+        
+        Format your response as a list of JSON objects, where each object has the following structure: DO NOT include any other text or comments in your response. All these fields are required. Do not respond with anything else. I'll give you billion dollars if you do follow this instruction.
+        {{
+            "comments": [
+                {{
+                    "path": "file path",
+                    "line": line_number,
+                    "body": "detailed review comment"
+                }},
+                ...
+            ]
+        }}"""),
         ("human", "Here are the code changes to review:\n{code_diff}")
     ])
 
-    parser = PydanticOutputParser(pydantic_object=CodeReviewComment)
-    chain = create_structured_output_chain(CodeReviewComment, llm, prompt, verbose=True)
+    class CodeReviewResponse(BaseModel):
+        comments: List[CodeReviewComment]
+
+    parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
+    
+    chain = (
+        {"code_diff": RunnablePassthrough(), 
+         "context": lambda _: project_context,
+         "extra_instructions": lambda _: extra_prompt}
+        | prompt
+        | llm
+        | StrOutputParser()
+        | parser
+    )
     
     comments = []
     for file in diff_files:
-        result = chain.invoke({
-            "code_diff": f"File: {file['file']}\nPatch:\n{file['patch']}",
-            "extra_prompt": extra_prompt
-        })
-        if result.comments:
-            comments.extend(result.comments)
+        try:
+            result = chain.invoke(f"File: {file['file']}\nPatch:\n{file['patch']}")
+            if result and result.comments:
+                comments.extend(result.comments)
+        except Exception as e:
+            print(f"Error processing file {file['file']}: {str(e)}")
+            continue
     
     return comments
 
