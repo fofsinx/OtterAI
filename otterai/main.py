@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-from indexer import generate_review_context
+from otterai.indexer import generate_review_context
 from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 
@@ -27,10 +27,24 @@ def get_pr_diff(gh_token: str, repo_name: str, pr_number: int) -> List[Dict[str,
         {
             'file': file.filename,
             'patch': file.patch,
-            'content': file.raw_url
+            'content': file.raw_url,
+            'existing_comments': get_existing_comments(pr, file.filename)
         }
         for file in pr.get_files()
     ]
+
+def get_existing_comments(pr, file_path: str) -> List[Dict[str, Any]]:
+    """Get existing review comments for a specific file in the PR."""
+    comments = []
+    for comment in pr.get_review_comments():
+        if comment.path == file_path:
+            comments.append({
+                'line': comment.line,
+                'body': comment.body,
+                'user': comment.user.login,
+                'created_at': comment.created_at.isoformat()
+            })
+    return comments
 
 def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> List[CodeReviewComment]:
     """Review code changes using LangChain and OpenAI."""
@@ -55,6 +69,10 @@ def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_pr
         
         Additional instructions: {extra_instructions}
         
+        IMPORTANT: Review the existing comments below and avoid making duplicate or similar comments.
+        Only add new insights or points that haven't been covered by existing comments.
+        If a line already has a comment, only add a new comment if you have a significantly different or additional insight.
+        
         Format your response as a list of JSON objects, where each object has the following structure: DO NOT include any other text or comments in your response. All these fields are required. Do not respond with anything else. I'll give you billion dollars if you do follow this instruction.
         {{
             "comments": [
@@ -66,7 +84,14 @@ def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_pr
                 ...
             ]
         }}"""),
-        ("human", "Here are the code changes to review:\n{code_diff}")
+        ("human", """Here are the code changes to review:
+
+File: {file_name}
+Existing comments:
+{existing_comments}
+
+Changes:
+{code_diff}""")
     ])
 
     class CodeReviewResponse(BaseModel):
@@ -75,7 +100,9 @@ def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_pr
     parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
     
     chain = (
-        {"code_diff": RunnablePassthrough(), 
+        {"file_name": RunnablePassthrough(), 
+         "code_diff": RunnablePassthrough(),
+         "existing_comments": RunnablePassthrough(),
          "context": lambda _: project_context,
          "extra_instructions": lambda _: extra_prompt}
         | prompt
@@ -87,7 +114,19 @@ def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_pr
     comments = []
     for file in diff_files:
         try:
-            result = chain.invoke(f"File: {file['file']}\nPatch:\n{file['patch']}")
+            # Format existing comments
+            existing_comments_text = "No existing comments."
+            if file.get('existing_comments'):
+                existing_comments_text = "\n".join([
+                    f"Line {comment['line']}: {comment['body']} (by {comment['user']} at {comment['created_at']})"
+                    for comment in file['existing_comments']
+                ])
+
+            result = chain.invoke({
+                "file_name": file['file'],
+                "code_diff": file['patch'],
+                "existing_comments": existing_comments_text
+            })
             if result and result.comments:
                 comments.extend(result.comments)
         except Exception as e:
@@ -123,9 +162,10 @@ def main():
     pr = repo.get_pull(pr_number)
     
     for comment in comments:
+        get_commit = repo.get_commit(pr.head.sha)
         pr.create_review_comment(
             body=comment.body,
-            commit_id=pr.head.sha,
+            commit=get_commit,
             path=comment.path,
             line=comment.line
         )
