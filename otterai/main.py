@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Any, Optional, Tuple
-from github import Github, PullRequest, PullRequestComment
+from github import Github, PullRequest, PullRequestComment, Repository
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
@@ -125,12 +125,8 @@ def get_file_content(repo, file_path: str, commit_sha: str) -> str:
     except Exception:
         return ""
 
-def get_pr_diff(gh_token: str, repo_name: str, pr_number: int) -> List[Dict[str, Any]]:
+def get_pr_diff(repo: Repository.Repository, pr: PullRequest.PullRequest) -> List[Dict[str, Any]]:
     """Get the PR diff from GitHub."""
-    g = Github(gh_token)
-    repo = g.get_repo(repo_name)
-    pr = repo.get_pull(pr_number)
-    
     return [
         {
             'file': file.filename,
@@ -354,8 +350,26 @@ def main():
     pr_number = int(os.getenv('GITHUB_EVENT_NUMBER'))
     extra_prompt = os.getenv('INPUT_EXTRA_PROMPT', '')
     workspace = os.getenv('GITHUB_WORKSPACE', '.')
-
+    
     logging.info("🦦 Dr. OtterAI starting code review...")
+
+    # Handle GitHub operations
+    g = Github(github_token)
+    repo = g.get_repo(repo)
+    pr = repo.get_pull(pr_number)
+
+    # if pr name as no-review, skip the code review
+    skip_pattern = re.compile(r'(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted', re.IGNORECASE)
+    if skip_pattern.search(pr.title):
+        logging.info("🦦 No review requested, skipping code review")
+        pr.create_comment("🦦 No review requested, skipping code review @{}".format(pr.user.login))
+        return
+
+    if pr.state == 'merged':
+        logging.info("🦦 PR is merged, skipping code review")
+        pr.create_comment("🦦 PR is merged, skipping code review @{}".format(pr.user.login))
+        return
+    
     
     # Generate project context
     project_context = generate_review_context(workspace)
@@ -366,16 +380,7 @@ def main():
     # Review code with project context
     comments, comments_to_delete = review_code(diff_files, project_context, extra_prompt)
     
-    # Handle GitHub operations
-    g = Github(github_token)
-    repo = g.get_repo(repo)
-    pr = repo.get_pull(pr_number)
 
-    if pr.state == 'merged':
-        logging.info("🦦 PR is merged, skipping code review")
-        pr.create_comment("🦦 PR is merged, skipping code review")
-        return
-    
     # Delete comments first
     for comment_id in comments_to_delete:
         try:
