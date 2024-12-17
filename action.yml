@@ -56,7 +56,7 @@ runs:
     - name: Check if review is requested
       shell: bash
       run: |
-        if [[ ${{ github.event.pull_request.title }} =~ ^(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted ]]; then
+        if [[ "${{ github.event.pull_request.title }}" =~ ^(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted ]]; then
           echo "🦦 No review requested, skipping code review"
           exit 0
         fi
@@ -64,7 +64,7 @@ runs:
     - name: Check if PR is merged
       shell: bash
       run: |
-        if [[ ${{ github.event.pull_request.state }} == 'merged' ]]; then
+        if [[ "${{ github.event.pull_request.state }}" = "merged" ]]; then
           echo "🦦 PR is merged, skipping code review"
           exit 0
         fi
