@@ -13,10 +13,24 @@
 - 📝 Line-specific comments on code changes
 - 🤖 Auto-fix suggestions with new PRs
 - 🎯 Project-specific guidelines
+- 🚫 Skip review functionality with special PR titles
 
 ## 🛠️ How to Use
 
-### 1. Set up Secrets
+### 1. Skip Code Review (Optional)
+To skip the code review for specific PRs, include any of these patterns in your PR title:
+```
+no-review: Update documentation
+skip review: Quick fix
+skip-code-review: Emergency patch
+otterai-skip: Configuration update
+otter skip: Minor changes
+otter-restricted: Sensitive update
+```
+
+The review will be skipped and Dr. OtterAI will leave a comment notifying the PR author.
+
+### 2. Set up Secrets
 First, add the API key for your preferred LLM provider:
 
 #### OpenAI (Default)
@@ -39,7 +53,7 @@ GROQ_API_KEY=your-groq-key
 MISTRAL_API_KEY=your-mistral-key
 ```
 
-### 2. Create Workflow File
+### 3. Create Workflow File
 Create `.github/workflows/code-review.yml` with:
 
 ```yaml
@@ -75,7 +89,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 3. Provider-Specific Configurations
+### 4. Provider-Specific Configurations
 
 #### OpenAI
 ```yaml
@@ -110,7 +124,7 @@ with:
   model: 'mistral-large-latest'  # Optional, default model
 ```
 
-### 4. Customize Review Focus (Optional)
+### 5. Customize Review Focus (Optional)
 Add specific focus areas for the review:
 
 ```yaml
@@ -123,7 +137,7 @@ with:
     - Code maintainability
 ```
 
-### 5. Auto-Fix Feature
+### 6. Auto-Fix Feature
 Dr. OtterAI will:
 1. Review your code changes
 2. Add detailed comments
