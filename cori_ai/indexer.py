@@ -169,5 +169,5 @@ def generate_review_context(repo_root: str) -> str:
 
 {analysis}
 
-When reviewing code changes, ensure they align with the project structure and guidelines outlined above.
+When reviewing/writing code, ensure they align with the project structure and guidelines outlined above.
 Focus on maintaining consistency with the existing patterns while suggesting improvements where appropriate.""" 

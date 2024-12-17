@@ -437,7 +437,6 @@ def main():
     # Review code with project context
     comments, comments_to_delete = review_code(diff_files, project_context, pr_metadata, extra_prompt)
     
-
     # Delete comments first
     for comment_id in comments_to_delete:
         try:
@@ -460,7 +459,7 @@ def main():
                     body=comment.body,
                     commit=get_commit,
                     path=comment.path,
-                    line=comment.line  # Using line number directly
+                    line=comment.line
                 )
                 print(f"🎯 Added review comment at line {comment.line} in {comment.path} {comment.body}")
         except Exception as e:
@@ -481,6 +480,28 @@ def main():
         )
     )
     
+    if os.getenv('INPUT_SKIP_FIXES', 'false').lower() == 'false':
+        # Group comments by file for fix generation
+        files_to_fix = {}
+        for comment in comments:
+            if comment.path not in files_to_fix:
+                files_to_fix[comment.path] = []
+            files_to_fix[comment.path].append({
+                'line': comment.line,
+                'body': comment.body
+            })
+
+        # Create fix PR
+        from cori_ai.fix_generator import create_fix_pr
+        fix_pr_url = create_fix_pr(github_token, repo.name, pr_number, files_to_fix, project_context)
+        
+        if fix_pr_url:
+            pr.create_issue_comment(body=f"Hey @${{ github.event.pull_request.user.login }}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge it if it's good.")
+            print(f"✨ Created fix PR: {fix_pr_url}")
+        else:
+            pr.create_issue_comment(body=f"Hey @${{ github.event.pull_request.user.login }}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
+            print("⚠️ No fixes were generated")
+
     print("✨ Code review completed!")
 
 def generate_review_summary(comments: List[CodeReviewComment]) -> str:
