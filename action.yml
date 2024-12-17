@@ -53,6 +53,21 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Check if review is requested
+      shell: bash
+      run: |
+        if [[ ${{ github.event.pull_request.title }} =~ ^(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted ]]; then
+          echo "🦦 No review requested, skipping code review"
+          exit 0
+        fi
+
+    - name: Check if PR is merged
+      shell: bash
+      run: |
+        if [[ ${{ github.event.pull_request.state }} == 'merged' ]]; then
+          echo "🦦 PR is merged, skipping code review"
+          exit 0
+        fi
     - name: Set up Python
       uses: actions/setup-python@v5
       with:

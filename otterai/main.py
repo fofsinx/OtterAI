@@ -357,19 +357,7 @@ def main():
     g = Github(github_token)
     repo = g.get_repo(repo)
     pr = repo.get_pull(pr_number)
-
-    # if pr name as no-review, skip the code review
-    skip_pattern = re.compile(r'(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted', re.IGNORECASE)
-    if skip_pattern.search(pr.title):
-        logging.info("🦦 No review requested, skipping code review")
-        pr.create_comment("🦦 No review requested, skipping code review @{}".format(pr.user.login))
-        return
-
-    if pr.state == 'merged':
-        logging.info("🦦 PR is merged, skipping code review")
-        pr.create_comment("🦦 PR is merged, skipping code review @{}".format(pr.user.login))
-        return
-    
+    get_commit = repo.get_commit(pr.head.sha)
     
     # Generate project context
     project_context = generate_review_context(workspace)
@@ -399,7 +387,6 @@ def main():
     for comment in comments:
         try:
             with lock:
-                get_commit = repo.get_commit(pr.head.sha)
                 pr.create_review_comment(
                     body=comment.body,
                     commit=get_commit,
