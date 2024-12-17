@@ -1,14 +1,11 @@
 import os
 from typing import List, Dict, Any, Optional, Tuple
 from github import Github, PullRequest, PullRequestComment
-import httpx
-from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from otterai.indexer import generate_review_context
-from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 from otterai.llm_client import LLMClient  # Import the singleton client
 import re
@@ -28,7 +25,7 @@ class CodeReviewComment(BaseModel):
     line: int = Field(description="Line number in the file where the comment should be added", gt=0)
     body: str = Field(description="The review comment with emoji category and specific feedback")
 
-    @validator('line')
+    @field_validator('line')
     def line_must_be_positive(cls, v):
         if v <= 0:
             raise ValueError('Line number must be positive')
@@ -188,51 +185,56 @@ def get_position_from_line(patch: str, target_line: int) -> Optional[int]:
 
 def clean_json_string(json_str: str) -> str:
     """Clean and format JSON string from LLM response."""
+    try:
+        # If it's already valid JSON, return it
+        parsed = json.loads(json_str)
+        # Only add comments_to_delete if it's a review response
+        if "comments" in parsed and "comments_to_delete" not in parsed:
+            parsed["comments_to_delete"] = []
+        return json.dumps(parsed)
+    except json.JSONDecodeError:
+        pass
+
     # Remove any leading/trailing whitespace
     json_str = json_str.strip()
     
     # Remove any markdown code block markers
     json_str = re.sub(r'```json\s*|\s*```', '', json_str)
     
-    # Handle case where response starts with "comments"
-    if json_str.lstrip().startswith('"comments"'):
+    # Special handling for responses starting with newline and "comments"
+    if json_str.startswith('\n'):
+        json_str = json_str.lstrip()
+    
+    # If it starts with "comments", wrap it in braces
+    if json_str.startswith('"comments"'):
+        json_str = '{' + json_str + '}'
+    elif json_str.startswith('comments'):
+        json_str = '{"' + json_str.replace('comments', '"comments"', 1) + '}'
+    
+    # Ensure proper JSON structure
+    if not json_str.startswith('{'):
         json_str = '{' + json_str + '}'
     
-    # Handle case where response starts with newline and "comments"
-    if json_str.lstrip().startswith('\n'):
-        json_str = json_str.lstrip()
-        if json_str.startswith('"comments"'):
-            json_str = '{' + json_str + '}'
-    
-    # Ensure the string starts with a curly brace
-    if not json_str.startswith('{'):
-        json_str = '{' + json_str
-    
-    # Ensure the string ends with a curly brace
-    if not json_str.endswith('}'):
-        json_str = json_str + '}'
-    
-    # Fix any truncated JSON by balancing braces
-    if json_str.count('{') != json_str.count('}'):
-        missing_braces = json_str.count('{') - json_str.count('}')
-        if missing_braces > 0:
-            json_str += '}' * missing_braces
-        else:
-            json_str = '{' * abs(missing_braces) + json_str
-    
-    # Attempt to fix common formatting issues
     try:
-        # Parse and re-stringify to ensure valid JSON
+        # Try to parse and format the JSON
         parsed = json.loads(json_str)
+        
+        # Only add comments_to_delete for review responses
+        if "comments" in parsed and "comments_to_delete" not in parsed:
+            parsed["comments_to_delete"] = []
+            
         return json.dumps(parsed)
-    except json.JSONDecodeError:
-        # If parsing fails, return the cleaned string
-        return json_str
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to parse JSON after cleaning: {e}")
+        # Return a valid empty response as fallback
+        return '{"comments": []}'
 
 def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
     """Review code changes using LangChain and OpenAI."""
     llm_client = LLMClient()
     llm = llm_client.get_client()
+    
+    parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are Dr. OtterAI, an expert code reviewer. Review code changes and provide specific, actionable feedback.
@@ -255,19 +257,9 @@ IMPORTANT RULES:
 
 {extra_instructions}
 
-IMPORTANT: Your response must be a valid JSON object with this exact format:
-{
-    "comments": [
-        {
-            "path": "<file path>",
-            "line": <number from valid_lines>,
-            "body": "<emoji> Your specific comment"
-        }
-    ],
-    "comments_to_delete": []
-}
+{format_instructions}
 
-Ensure your response is complete and properly formatted JSON. Do not truncate or leave the JSON incomplete."""),
+Ensure your response is complete and properly formatted JSON."""),
         ("human", """Review this code change:
 
 File: {file_name}
@@ -281,8 +273,6 @@ Existing comments:
 Diff to review:
 {code_diff}""")
     ])
-
-    parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
     
     comments = []
     comments_to_delete = set()
@@ -310,59 +300,40 @@ Diff to review:
                 existing_comments=existing_comments_text,
                 valid_lines=valid_lines,
                 context=project_context,
-                extra_instructions=extra_prompt
+                extra_instructions=extra_prompt,
+                format_instructions=parser.get_format_instructions()
             )
 
             # Get raw response from LLM
             raw_result = llm.invoke(formatted_prompt)
             
-            # Clean and parse the JSON response
             try:
-                cleaned_json = clean_json_string(raw_result.content)
-                logging.debug(f"Cleaned JSON for {file['file']}: {cleaned_json}")
+                # Parse the response using LangChain's parser
+                result = parser.parse(raw_result.content)
                 
-                # Additional validation to ensure we have a complete JSON structure
-                if not cleaned_json.strip():
-                    logging.error(f"Empty JSON response for {file['file']}")
-                    continue
-                    
-                parsed_json = json.loads(cleaned_json)
-                
-                # Ensure the required fields exist
-                if "comments" not in parsed_json:
-                    parsed_json["comments"] = []
-                if "comments_to_delete" not in parsed_json:
-                    parsed_json["comments_to_delete"] = []
-                    
-            except json.JSONDecodeError as json_err:
-                logging.error(f"❌ JSON Decode Error for {file['file']}: {str(json_err)}")
-                logging.error(f"Raw response: {raw_result.content}")
-                continue
-
-            # Validate the JSON structure
-            try:
-                result = CodeReviewResponse.model_validate(parsed_json)
-            except Exception as pydantic_err:
-                logging.error(f"❌ Pydantic Validation Error for {file['file']}: {str(pydantic_err)}")
-                continue
-            
-            if result:
-                if result.comments:
-                    valid_comments = []
-                    for comment in result.comments:
-                        # Multiple validation steps
-                        if comment.line in file['line_mapping']:
-                            if validate_comment_position(file['patch'], comment.line):
-                                comment.path = file['file']
-                                valid_comments.append(comment)
-                            else:
-                                logging.warning(f"⚠️ Invalid line {comment.line} in {file['file']}")
+                # Validate comments
+                valid_comments = []
+                for comment in result.comments:
+                    # Set the file path if not already set
+                    if not comment.path:
+                        comment.path = file['file']
+                        
+                    if comment.line in file['line_mapping']:
+                        if validate_comment_position(file['patch'], comment.line):
+                            valid_comments.append(comment)
                         else:
-                            logging.warning(f"⚠️ Rejected invalid line {comment.line} for file {file['file']}")
-                    comments.extend(valid_comments)
+                            logging.warning(f"⚠️ Invalid line {comment.line} in {file['file']}")
+                    else:
+                        logging.warning(f"⚠️ Rejected invalid line {comment.line} for file {file['file']}")
                 
+                comments.extend(valid_comments)
                 if result.comments_to_delete:
                     comments_to_delete.update(result.comments_to_delete)
+                    
+            except Exception as e:
+                logging.error(f"Error processing file {file['file']}: {str(e)}")
+                logging.error(f"Raw response: {raw_result.content}")
+                continue
                 
         except Exception as e:
             logging.error(f"Error processing file {file['file']}: {str(e)}")
