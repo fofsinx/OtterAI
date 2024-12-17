@@ -48,6 +48,7 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
         '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
         '*.min.js', '*.min.css', '*.map', '*.lock', '*.sum',
         'dist/*', 'build/*', '.env*', '*.log',
+        '*requirements.txt*',
         '*venv/*', '*.venv/*', '*.venv', 'venv/*', 'venv', '*.venv',
         '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
     ]
