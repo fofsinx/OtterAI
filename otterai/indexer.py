@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Dict, List, Optional
 from pathlib import Path
@@ -6,6 +5,7 @@ import fnmatch
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import httpx
+
 def should_ignore_file(file_path: str) -> bool:
     """Check if file should be ignored in indexing."""
     ignore_patterns = [
