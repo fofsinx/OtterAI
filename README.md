@@ -2,6 +2,8 @@
 
 🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart otter with multiple degrees in Computer Science! 🎓
 
+![OtterAI](/static/otterai.png)
+
 ## ✨ Features
 
 - 🔍 Automated code review comments on pull requests
@@ -126,7 +128,18 @@ Dr. OtterAI will:
 1. Review your code changes
 2. Add detailed comments
 3. Create a new PR with suggested fixes (coming soon)
+  > This will be a new PR that has the fixes
 4. Link the fix PR to your original PR (coming soon)
+  > This will be a link to the new PR that has the fixes
+5. Create relevant labels for the PR (coming soon)
+  > This will be a list of labels that need to be added to the PR
+6. Create relevant issues for the PR (coming soon)
+  > This will be a list of issues that need to be fixed
+7. Generate a summary of the PR (coming soon)
+  > This will be a summary of the PR and the changes made
+8. Generate feature guide for the PR (coming soon)
+  > This will be a guide for the developer to understand the feature and how to build it
+  > otter will suggest the best way to build the feature and the best practices to follow
 
 ## 🎓 Default Models by Provider
 
