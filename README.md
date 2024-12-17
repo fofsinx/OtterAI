@@ -1,23 +1,41 @@
 # 🦦 Dr. OtterAI Code Review, PhD
 
-🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using OpenAI's GPT models. Created by a very smart otter with multiple degrees in Computer Science! 🎓
+🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart otter with multiple degrees in Computer Science! 🎓
 
 ## ✨ Features
 
 - 🔍 Automated code review comments on pull requests
-- ⚙️ Configurable OpenAI model selection 
-- 🔌 Support for custom OpenAI API endpoints
-- 💬 Additional prompt customization for specific review focus
+- 🧠 Multiple LLM providers support (OpenAI, Gemini, Groq, Mistral)
+- 🔌 Custom API endpoint support
+- 💬 Customizable review focus
 - 📝 Line-specific comments on code changes
-- 🧠 Powered by an otter with a PhD in AI Ethics
+- 🤖 Auto-fix suggestions with new PRs
+- 🎯 Project-specific guidelines
 
 ## 🛠️ How to Use
 
 ### 1. Set up Secrets
-First, add these secrets to your repository:
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `GITHUB_TOKEN`: Automatically provided by GitHub Actions
-- (Optional) `OPENAI_BASE_URL`: Custom OpenAI API endpoint if you're using Azure or another provider
+First, add the API key for your preferred LLM provider:
+
+#### OpenAI (Default)
+```bash
+OPENAI_API_KEY=your-openai-key
+```
+
+#### Google Gemini
+```bash
+GOOGLE_API_KEY=your-gemini-key
+```
+
+#### Groq
+```bash
+GROQ_API_KEY=your-groq-key
+```
+
+#### Mistral
+```bash
+MISTRAL_API_KEY=your-mistral-key
+```
 
 ### 2. Create Workflow File
 Create `.github/workflows/code-review.yml` with:
@@ -40,49 +58,124 @@ jobs:
       - name: AI Code Review
         uses: fofsinx/otterai@v1.0.0
         with:
+          # Choose your preferred provider
+          provider: 'openai'  # or 'gemini', 'groq', 'mistral'
+          
+          # Provider-specific settings
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          # or
+          # google_api_key: ${{ secrets.GOOGLE_API_KEY }}
+          # or
+          # groq_api_key: ${{ secrets.GROQ_API_KEY }}
+          # or
+          # mistral_api_key: ${{ secrets.MISTRAL_API_KEY }}
+          
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 3. Customize the Review (Optional)
-Add these optional parameters to customize the review:
+### 3. Provider-Specific Configurations
+
+#### OpenAI
+```yaml
+with:
+  provider: 'openai'
+  openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+  model: 'gpt-4-turbo-preview'  # Optional, default model
+  openai_base_url: 'https://api.openai.com/v1'  # Optional, for custom endpoints
+```
+
+#### Google Gemini
+```yaml
+with:
+  provider: 'gemini'
+  google_api_key: ${{ secrets.GOOGLE_API_KEY }}
+  model: 'gemini-1.5-flash'  # Optional, default model
+```
+
+#### Groq
+```yaml
+with:
+  provider: 'groq'
+  groq_api_key: ${{ secrets.GROQ_API_KEY }}
+  model: 'mixtral-8x7b-32768'  # Optional, default model
+```
+
+#### Mistral
+```yaml
+with:
+  provider: 'mistral'
+  mistral_api_key: ${{ secrets.MISTRAL_API_KEY }}
+  model: 'mistral-large-latest'  # Optional, default model
+```
+
+### 4. Customize Review Focus (Optional)
+Add specific focus areas for the review:
 
 ```yaml
 with:
-  # ... required parameters ...
-  model: 'gpt-4-turbo-preview'  # Choose your preferred model
+  # ... provider settings ...
   extra_prompt: |
     Focus on:
     - Security best practices
     - Performance optimizations
     - Code maintainability
-  openai_base_url: 'https://your-custom-endpoint.com'  # For custom API endpoints
 ```
 
-### 4. Create a Pull Request
-The AI reviewer will automatically:
-- Analyze your code changes
-- Add relevant comments
-- Suggest improvements
-- Focus on your specified review areas
+### 5. Auto-Fix Feature
+Dr. OtterAI will:
+1. Review your code changes
+2. Add detailed comments
+3. Create a new PR with suggested fixes (coming soon)
+4. Link the fix PR to your original PR (coming soon)
 
-### 5. Review Feedback
-- Check the pull request comments
-- Address the AI's suggestions
-- Iterate on your code as needed
+## 🎓 Default Models by Provider
 
+| Provider | Default Model | Alternative Options |
+|----------|---------------|-------------------|
+| OpenAI | gpt-4-turbo-preview | gpt-4, gpt-3.5-turbo |
+| Gemini | gemini-1.5-flash | gemini-1.5-pro | xyz |
+| Groq | mixtral-8x7b-32768 | llama2-70b-4096 | xyz |
+| Mistral | mistral-large-latest | mistral-medium, mistral-small | xyz |
+
+## 🔒 Security Best Practices
+
+1. Store API keys securely in GitHub Secrets
+2. Use repository-specific tokens
+3. Set appropriate permissions in workflow
+4. Review auto-generated fixes before merging
+
+## 🐛 Troubleshooting
+
+### Common Issues
+1. **API Key Issues**: Ensure the correct API key is set for your chosen provider
+2. **Model Availability**: Some models might be region-restricted
+3. **Rate Limits**: Consider using different providers during high load
+
+### Provider Status
+- OpenAI: [status.openai.com](https://status.openai.com)
+- Gemini: [status.generativeai.google](https://status.generativeai.google)
+- Groq: [status.groq.com](https://status.groq.com)
+- Mistral: [status.mistral.ai](https://status.mistral.ai)
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Thanks to OpenAI for their powerful GPT models
-- Thanks to GitHub for their amazing platform
-- Thanks to the otter who created this action
+- Thanks to all LLM providers for their amazing models
+- Thanks to GitHub for their platform
+- Thanks to the otter who created this action (and their PhD committee)
 
-## 🦦 OtterAI Code Review, PhD
+## 🦦 Support
+
+- 📧 Email: thehuman@boring.name
+- 🐙 GitHub Issues: [Create an issue](https://github.com/fofsinx/otterai/issues)
+- 🦦 Otter Signal: *splashes water playfully*
+
+---
+
+Made with 💖 by Dr. OtterAI, PhD in Computer Science, Machine Learning, and Fish Recognition
 
 
 
