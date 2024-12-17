@@ -191,13 +191,26 @@ def clean_json_string(json_str: str) -> str:
     # Remove any leading/trailing whitespace
     json_str = json_str.strip()
     
-    # If the response starts with a newline and "comments", wrap it in curly braces
-    if json_str.startswith('\n    "comments"'):
-        json_str = '{' + json_str + '}'
-    
     # Remove any markdown code block markers
-    json_str = json_str.replace('```json', '').replace('```', '')
+    json_str = re.sub(r'```json\s*|\s*```', '', json_str)
     
+    # Ensure the string starts with a curly brace
+    if not json_str.startswith('{'):
+        json_str = '{' + json_str
+    
+    # Ensure the string ends with a curly brace
+    if not json_str.endswith('}'):
+        json_str = json_str + '}'
+    
+    # Fix any truncated JSON
+    if json_str.count('{') != json_str.count('}'):
+        # Try to complete the JSON structure
+        missing_braces = json_str.count('{') - json_str.count('}')
+        if missing_braces > 0:
+            json_str += '}' * missing_braces
+        else:
+            json_str = '{' * abs(missing_braces) + json_str
+            
     return json_str
 
 def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
@@ -227,18 +240,18 @@ IMPORTANT RULES:
 {extra_instructions}
 
 IMPORTANT: Your response must be a valid JSON object with this exact format:
-{{
+{
     "comments": [
-        {{
+        {
             "path": "<file path>",
             "line": <number from valid_lines>,
             "body": "<emoji> Your specific comment"
-        }}
+        }
     ],
-    "comments_to_delete": [<comment_ids>]
-}}
+    "comments_to_delete": []
+}
 
-Do not include any other text, explanations, or markdown formatting in your response."""),
+Ensure your response is complete and properly formatted JSON. Do not truncate or leave the JSON incomplete."""),
         ("human", """Review this code change:
 
 File: {file_name}
@@ -291,7 +304,20 @@ Diff to review:
             try:
                 cleaned_json = clean_json_string(raw_result.content)
                 logging.debug(f"Cleaned JSON for {file['file']}: {cleaned_json}")
+                
+                # Additional validation to ensure we have a complete JSON structure
+                if not cleaned_json.strip():
+                    logging.error(f"Empty JSON response for {file['file']}")
+                    continue
+                    
                 parsed_json = json.loads(cleaned_json)
+                
+                # Ensure the required fields exist
+                if "comments" not in parsed_json:
+                    parsed_json["comments"] = []
+                if "comments_to_delete" not in parsed_json:
+                    parsed_json["comments_to_delete"] = []
+                    
             except json.JSONDecodeError as json_err:
                 logging.error(f"❌ JSON Decode Error for {file['file']}: {str(json_err)}")
                 logging.error(f"Raw response: {raw_result.content}")
