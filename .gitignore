@@ -24,3 +24,5 @@ htmlcov/
 .vscode/
 *.swp
 *.swo
+
+.env
