@@ -1,0 +1,35 @@
+name: Test OtterAI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to get full history for better context
+
+      - name: OtterAI Code Review
+        uses: ./  # Uses the action from the current repository
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
+          github_token: ${{ secrets.GH_TOKEN }}
+          model: 'gpt-4-turbo-preview'
+          extra_prompt: |
+            Please focus on:
+            - Python best practices and PEP8 compliance
+            - Security implications of the changes
+            - Performance optimizations
+            - Code maintainability and documentation
+            - Potential edge cases and error handling 
