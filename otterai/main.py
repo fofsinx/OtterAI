@@ -363,7 +363,7 @@ def main():
     project_context = generate_review_context(workspace)
 
     # Get PR changes
-    diff_files = get_pr_diff(github_token, repo, pr_number)
+    diff_files = get_pr_diff(repo, pr)
     
     # Review code with project context
     comments, comments_to_delete = review_code(diff_files, project_context, extra_prompt)
