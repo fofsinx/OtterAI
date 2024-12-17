@@ -30,8 +30,20 @@ def get_file_type(file_path: str) -> Optional[str]:
         return 'frontend'
     elif ext in ['.sql', '.graphql']:
         return 'data'
-    elif ext in ['.test.js', '.test.ts', '.spec.py', '_test.go']:
+    elif ext in ['.test.js', '.test.ts', '.spec.py', '_test.go', '.spec.js', '.spec.ts']:
         return 'test'
+    elif ext in ['.env', '.env.*']:
+        return 'environment'
+    elif ext in ['.gitignore', '.dockerignore']:
+        return 'ignore'
+    elif ext in ['.git', '.github']:
+        return 'git'
+    elif ext in ['.github']:
+        return 'github'
+    elif ext in ['.dockerfile', '.dockerignore', '.docker-compose.yml', '.docker-compose.yaml', '.docker-compose.toml']:
+        return 'docker'
+    elif ext in ['.npmrc', '.yarnrc', '.yarnrc.yml', '.yarnrc.yaml', '.yarnrc.json', '.yarnrc.toml', '.yarnrc.yaml', '.yarnrc.yml']:
+        return 'npm'
     return None
 
 def index_codebase(root_dir: str) -> Dict[str, List[str]]:
@@ -82,12 +94,14 @@ Focus on:
 3. Coding standards and patterns observed
 4. Important dependencies and configurations
 5. Testing approach
+6. File types and their purpose
  
 Steps:
 1. Read the codebase structure
 2. Read the key files' content
 3. Generate the analysis
 4. Strictly check which language is used in the codebase; do not mention any other language if not specified.
+5. Follow the best practices for the language used in the codebase.
 
 Do not use any other language than English. Do not leak any sensitive information.
 
