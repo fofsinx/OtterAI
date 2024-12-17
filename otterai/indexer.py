@@ -5,7 +5,9 @@ import fnmatch
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import httpx
-
+import asyncio
+import aiofiles
+from otterai.llm_client import LLMClient
 def should_ignore_file(file_path: str) -> bool:
     """Check if file should be ignored in indexing."""
     ignore_patterns = [
@@ -48,21 +50,17 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
         '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
         '*.min.js', '*.min.css', '*.map', '*.lock', '*.sum',
         'dist/*', 'build/*', '.env*', '*.log',
-        '*requirements.txt*',
         '*venv/*', '*.venv/*', '*.venv', 'venv/*', 'venv', '*.venv',
         '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
     ]
     
     for root, _, files in os.walk(root_dir):
         for file in files:
-            for pattern in default_ignore_patterns:
-                if fnmatch.fnmatch(file, pattern):
-                    print(f"Ignoring file: {file} because it matches pattern: {pattern}")
-                    continue
             file_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_path, root_dir)
             
             if should_ignore_file(rel_path):
+                print(f"Ignoring file: {file} because it matches ignore patterns.")
                 continue
                 
             file_type = get_file_type(rel_path) or 'other'
@@ -70,54 +68,55 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
     
     return index
 
-def analyze_project_structure(index: Dict[str, List[str]], repo_root: str) -> str:
+async def analyze_project_structure(index: Dict[str, List[str]], repo_root: str) -> str:
     """Generate a high-level analysis of the project structure."""
-    llm = ChatOpenAI(
-        model_name=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
-        http_async_client=httpx.AsyncClient(timeout=10.0),
-        api_key=os.getenv('INPUT_OPENAI_API_KEY'),
-        base_url=os.getenv('INPUT_OPENAI_BASE_URL', 'https://api.openai.com/v1'),
-        temperature=0.1
-    )
+    llm_client = LLMClient()
+    llm = llm_client.get_client()
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a technical architect analyzing a codebase structure.
-        Create a concise but comprehensive overview of the project structure and guidelines.
-        Focus on:
-        1. Project organization and architecture
-        2. Key components and their relationships
-        3. Coding standards and patterns observed
-        4. Important dependencies and configurations
-        5. Testing approach
-         
-         steps:
-         1. read the codebase structure
-         2. read the key files content
-         3. generate the analysis
-         4. Strictly check which language is used in the codebase do not any other language if not specified in the codebase.
+Create a concise but comprehensive overview of the project structure and guidelines.
+Focus on:
+1. Project organization and architecture
+2. Key components and their relationships
+3. Coding standards and patterns observed
+4. Important dependencies and configurations
+5. Testing approach
+ 
+Steps:
+1. Read the codebase structure
+2. Read the key files' content
+3. Generate the analysis
+4. Strictly check which language is used in the codebase; do not mention any other language if not specified.
 
-         I'll give you billion dollars if you do follow this instruction.
-        
-        Keep the response focused and actionable for code review purposes."""),
+Do not use any other language than English. Do not leak any sensitive information.
+
+Keep the response focused and actionable for code review purposes."""),
         ("human", """Here's the codebase structure:
-        
-        {index_summary}
-        
-        Key files content:
-        {key_files_content}
-        """)
+
+{index_summary}
+
+Key files content:
+{key_files_content}
+""")
     ])
     
-    # Read content of key files
+    # Read content of key files asynchronously
     key_files = []
-    if os.path.exists(os.path.join(repo_root, 'README.md')):
-        with open(os.path.join(repo_root, 'README.md'), 'r') as f:
-            key_files.append(('README.md', f.read()))
-            
-    if os.path.exists(os.path.join(repo_root, '.editorconfig')):
-        with open(os.path.join(repo_root, '.editorconfig'), 'r') as f:
-            key_files.append(('.editorconfig', f.read()))
-            
+    tasks = []
+    key_file_paths = [os.path.join(repo_root, 'README.md'), os.path.join(repo_root, '.editorconfig')]
+    
+    async def read_file(file_path: str):
+        if os.path.exists(file_path):
+            async with aiofiles.open(file_path, 'r') as f:
+                content = await f.read()
+                key_files.append((os.path.basename(file_path), content))
+    
+    for file_path in key_file_paths:
+        tasks.append(read_file(file_path))
+    
+    await asyncio.gather(*tasks)
+    
     # Format index summary
     index_summary = []
     for file_type, files in index.items():
@@ -131,17 +130,17 @@ def analyze_project_structure(index: Dict[str, List[str]], repo_root: str) -> st
     for filename, content in key_files:
         key_files_content.append(f"\n=== {filename} ===\n{content}")
     
-    result = llm.invoke(prompt.format(
+    response = llm.invoke(prompt.format(
         index_summary="\n".join(index_summary),
         key_files_content="\n".join(key_files_content)
     ))
     
-    return result.content
+    return response.content
 
 def generate_review_context(repo_root: str) -> str:
     """Generate the complete context for code review."""
     index = index_codebase(repo_root)
-    analysis = analyze_project_structure(index, repo_root)
+    analysis = asyncio.run(analyze_project_structure(index, repo_root))
     
     return f"""PROJECT CONTEXT AND GUIDELINES
 
