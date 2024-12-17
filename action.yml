@@ -28,5 +28,30 @@ inputs:
     default: 'gpt-4-turbo-preview'
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile' 
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run OtterAI Code Review
+      shell: bash
+      env:
+        INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+        INPUT_OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_EXTRA_PROMPT: ${{ inputs.extra_prompt }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_EVENT_NUMBER: ${{ github.event.number }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}
+      run: |
+        python -m otterai.main 
