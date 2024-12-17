@@ -49,6 +49,14 @@ inputs:
     description: 'Model to use (provider-specific, e.g., gpt-4-turbo-preview for OpenAI, gemini-pro for Google)'
     required: false
     default: ''
+  skip_fixes:
+    description: 'Skip fix generation'
+    required: false
+    default: 'false'
+  skip_generated_pr_review:
+    description: 'Skip generated PR review'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -61,6 +69,8 @@ runs:
         PR_DESCRIPTION: ${{ github.event.pull_request.body }}
         PR_STATE: ${{ github.event.pull_request.state }}
         MERGE_PATTERN: \b(?:merged|closed)\b
+        BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        BRANCH_NAME_PATTERN: \b(?:otterai/fixes-for-pr-\d+)\b
         PATTERN: \b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b
       run: |
         import os
@@ -71,8 +81,10 @@ runs:
         pr_description = os.environ['PR_DESCRIPTION']
         merge_pattern = os.environ['MERGE_PATTERN']
         pr_state = os.environ['PR_STATE']
+        branch_name = os.environ['BRANCH_NAME']
+        branch_name_pattern = os.environ['BRANCH_NAME_PATTERN']
 
-        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE):
+        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE) or re.search(branch_name_pattern, branch_name, re.IGNORECASE):
             print("🦦 No review requested, skipping code review")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=false\n")
@@ -93,7 +105,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         PR_NUMBER: ${{ github.event.number }}
-        COMMENT: "Hey @${{ github.event.pull_request.user.login }}! 🦦 Code review skipped based on PR title/description pattern or PR state. Hope you have a great day! 🐞"
+        COMMENT: "Hey @${{ github.event.pull_request.user.login }}! 🦦 Code review skipped based on PR title/description pattern or PR state or branch name pattern. Hope you have a great day! 🐞"
       run: |
         # First check if comment already exists
         EXISTING_COMMENTS=$(curl -L \
@@ -150,5 +162,7 @@ runs:
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
+        INPUT_SKIP_FIXES: ${{ inputs.skip_fixes }}
+        INPUT_SKIP_GENERATED_PR_REVIEW: ${{ inputs.skip_generated_pr_review }}
       run: |
         python -m otterai.main
