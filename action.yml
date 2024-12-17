@@ -1,0 +1,28 @@
+name: 'OtterAI Code Review'
+description: 'AI-powered code review that adds comments to your pull requests'
+author: 'OtterAI'
+
+inputs:
+  openai_api_key:
+    description: 'OpenAI API key for code review'
+    required: true
+  openai_base_url:
+    description: 'OpenAI API base URL (optional)'
+    required: false
+    default: 'https://api.openai.com/v1'
+  github_token:
+    description: 'GitHub token for PR access'
+    required: true
+    default: ${{ github.token }}
+  extra_prompt:
+    description: 'Additional instructions for the AI reviewer'
+    required: false
+    default: ''
+  model:
+    description: 'OpenAI model to use'
+    required: false
+    default: 'gpt-4-turbo-preview'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile' 
