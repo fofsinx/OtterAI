@@ -7,13 +7,36 @@ branding:
   color: 'yellow'
 
 inputs:
+  provider:
+    description: 'LLM provider to use (openai, gemini, groq, or mistral)'
+    required: false
+    default: 'openai'
+  
+  # OpenAI settings
   openai_api_key:
-    description: 'OpenAI API key for code review'
-    required: true
+    description: 'OpenAI API key (required if using OpenAI)'
+    required: false
   openai_base_url:
     description: 'OpenAI API base URL (optional)'
     required: false
     default: 'https://api.openai.com/v1'
+  
+  # Google Gemini settings
+  google_api_key:
+    description: 'Google API key (required if using Gemini)'
+    required: false
+  
+  # Groq settings
+  groq_api_key:
+    description: 'Groq API key (required if using Groq)'
+    required: false
+  
+  # Mistral settings
+  mistral_api_key:
+    description: 'Mistral API key (required if using Mistral)'
+    required: false
+  
+  # Common settings
   github_token:
     description: 'GitHub token for PR access'
     required: true
@@ -23,9 +46,9 @@ inputs:
     required: false
     default: ''
   model:
-    description: 'OpenAI model to use'
+    description: 'Model to use (provider-specific, e.g., gpt-4-turbo-preview for OpenAI, gemini-pro for Google)'
     required: false
-    default: 'gpt-4-turbo-preview'
+    default: ''
 
 runs:
   using: 'composite'
@@ -45,8 +68,17 @@ runs:
     - name: Run OtterAI Code Review
       shell: bash
       env:
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        # OpenAI
         INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         INPUT_OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
+        # Google
+        INPUT_GOOGLE_API_KEY: ${{ inputs.google_api_key }}
+        # Groq
+        INPUT_GROQ_API_KEY: ${{ inputs.groq_api_key }}
+        # Mistral
+        INPUT_MISTRAL_API_KEY: ${{ inputs.mistral_api_key }}
+        # Common
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         INPUT_MODEL: ${{ inputs.model }}
         INPUT_EXTRA_PROMPT: ${{ inputs.extra_prompt }}
@@ -54,4 +86,4 @@ runs:
         GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
       run: |
-        python -m otterai.main 
+        python -m otterai.main
