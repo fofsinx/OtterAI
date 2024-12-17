@@ -11,6 +11,8 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.12
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,7 +23,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m unittest discover -s tests -p 'test_*.py'
+          python -m unittest discover -s otterai/tests -p 'test_*.py'
 
   
   code-review:
