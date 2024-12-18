@@ -54,7 +54,7 @@ runs:
   using: 'composite'
   steps:
     - name: Check if review is requested
-      shell: bash
+      shell: sh
       env:
         PR_TITLE: ${{ github.event.pull_request.title }}
         PATTERN: \\b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\\b
@@ -68,7 +68,7 @@ runs:
         fi
 
     - name: Check if PR is merged
-      shell: bash
+      shell: sh
       env:
         PR_STATE: ${{ github.event.pull_request.state }}
         PATTERN: \\b(merged|closed)\\b
