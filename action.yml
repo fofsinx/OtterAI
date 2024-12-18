@@ -54,6 +54,7 @@ runs:
   using: 'composite'
   steps:
     - name: Check if review is requested
+      id: check_if_review_requested
       shell: python
       env:
         PR_TITLE: ${{ github.event.pull_request.title }}
