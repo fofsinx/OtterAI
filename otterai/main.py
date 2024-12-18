@@ -248,6 +248,7 @@ IMPORTANT RULES:
    - The comment is no longer relevant
    - The line no longer exists
    - A new comment would be more appropriate
+8. In your comments include code snippets to help the reviewer understand the code use markdown code blocks, be concise and specific. Add doc references to the code if needed.
 
 {context}
 
