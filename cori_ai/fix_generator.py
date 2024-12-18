@@ -1,9 +1,9 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from github import Repository, GithubException, PullRequest
+from langchain_core.exceptions import OutputParserException
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from langchain.output_parsers.json import OutputParserException
 from pydantic import BaseModel, Field
 import base64
 import logging
@@ -12,16 +12,20 @@ from otterai.llm_client import LLMClient
 
 # Initialize a lock to handle race conditions
 from threading import Lock
+
 lock = Lock()
+
 
 class CodeFix(BaseModel):
     """Model for code fix response."""
     file: str = Field(description="File path that was fixed")
     content: str = Field(description="Complete fixed file content with all necessary imports and dependencies")
 
+
 def create_branch_name(pr_number: int) -> str:
     """Create a unique branch name for the fixes."""
-    return f"otterai/fixes-for-pr-{pr_number}"
+    return f"otter-ai/fixes-for-pr-{pr_number}"
+
 
 def get_file_content(repo: Repository, file_path: str, ref: str) -> str:
     """Get content of a file from GitHub."""
@@ -34,7 +38,9 @@ def get_file_content(repo: Repository, file_path: str, ref: str) -> str:
         logging.error(f"Unexpected error getting file content: {str(e)}")
     return ""
 
-def generate_fix(llm: ChatOpenAI, file_path: str, original_content: str, review_comments: List[Dict[str, Any]], analysis: str) -> str:
+
+def generate_fix(llm: ChatOpenAI, file_path: str, original_content: str, review_comments: List[Dict[str, Any]],
+                 analysis: str) -> str:
     """Generate fixed content for a file based on review comments."""
     # Create the output parser
     parser = PydanticOutputParser(pydantic_object=CodeFix)
@@ -90,7 +96,7 @@ Return the fixed code as a JSON object with 'file' and 'content' fields. Do not 
             "review_comments": formatted_comments,
             "analysis": analysis
         })
-        
+
         return response.content
     except OutputParserException as e:
         logging.error(f"Error parsing output for {file_path}: {e}")
@@ -100,20 +106,23 @@ Return the fixed code as a JSON object with 'file' and 'content' fields. Do not 
         logging.error(f"Error generating fix for {file_path}: {e}")
         return original_content
 
+
 def create_fix_pr(
-    repo: Repository,
-    base_pr: PullRequest.PullRequest,
-    files_to_fix: Dict[str, List[Dict[str, Any]]],
-    analysis: str
+        repo: Repository,
+        base_pr: PullRequest.PullRequest,
+        files_to_fix: Dict[str, List[Dict[str, Any]]],
+        analysis: str
 ) -> str:
     """Create a new PR with fixes for the review comments."""
-    
+
+    new_branch = ""
+    base_ref = base_pr.head.ref
+    base_sha = base_pr.head.sha
     # Create a new branch from the head of the base PR with retry to handle race conditions
     for attempt in range(3):
         try:
             new_branch = create_branch_name(base_pr.number)
-            base_ref = base_pr.head.ref
-            base_sha = base_pr.head.sha
+
             logging.info(f"Creating branch {new_branch} from {base_ref} with SHA {base_sha}")
             with lock:
                 repo.create_git_ref(ref=f"refs/heads/{new_branch}", sha=base_sha)
@@ -127,7 +136,7 @@ def create_fix_pr(
         except Exception as e:
             logging.error(f"Unexpected error creating branch: {str(e)}")
             return ""
-    
+
     llm = LLMClient().get_client()
 
     # Generate and commit fixes
@@ -216,6 +225,7 @@ Create a detailed PR description based on the above information.""")
     else:
         logging.error("Failed to create pull request after multiple attempts.")
         return ""
+
 
 def extract_pr_description_from_response(response: str) -> str:
     """Extract PR description from LLM response."""
