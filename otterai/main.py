@@ -20,6 +20,7 @@ lock = threading.Lock()
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class CodeReviewComment(BaseModel):
     path: str = Field(description="File path where the comment should be added")
     line: int = Field(description="Line number in the file where the comment should be added", gt=0)
@@ -31,18 +32,20 @@ class CodeReviewComment(BaseModel):
             raise ValueError('Line number must be positive')
         return v
 
+
 class CodeReviewResponse(BaseModel):
     comments: List[CodeReviewComment] = Field(description="New comments to add")
     comments_to_delete: List[int] = Field(description="IDs of comments that should be deleted", default=[])
+
 
 def validate_comment_position(file_patch: str, line: int) -> bool:
     """Validate if a line number is valid for commenting."""
     if not file_patch:
         return False
-        
+
     current_line = 0
     hunk_start = False
-    
+
     for patch_line in file_patch.split('\n'):
         if patch_line.startswith('@@'):
             hunk_start = True
@@ -50,13 +53,14 @@ def validate_comment_position(file_patch: str, line: int) -> bool:
             if match:
                 current_line = int(match.group(1)) - 1
             continue
-        
+
         if hunk_start and not patch_line.startswith('-'):
             current_line += 1
             if current_line == line:
                 return True
-    
+
     return False
+
 
 def parse_patch_for_positions(patch: str) -> Dict[int, Dict[str, Any]]:
     """Parse the patch to get line numbers and their positions in the diff."""
@@ -64,10 +68,10 @@ def parse_patch_for_positions(patch: str) -> Dict[int, Dict[str, Any]]:
     current_position = 0
     current_line = 0
     hunk_start = False
-    
+
     if not patch:
         return line_mapping
-        
+
     for line in patch.split('\n'):
         current_position += 1
         if line.startswith('@@'):
@@ -76,7 +80,7 @@ def parse_patch_for_positions(patch: str) -> Dict[int, Dict[str, Any]]:
             if match:
                 current_line = int(match.group(1)) - 1
             continue
-        
+
         if hunk_start and not line.startswith('-'):
             current_line += 1
             if current_line > 0:  # Ensure we only map positive line numbers
@@ -86,8 +90,9 @@ def parse_patch_for_positions(patch: str) -> Dict[int, Dict[str, Any]]:
                     'type': '+' if line.startswith('+') else ' ',
                     'hunk': line
                 }
-    
+
     return line_mapping
+
 
 def verify_comment_position(llm: ChatOpenAI, file_path: str, line: int, patch: str) -> bool:
     """Use LLM to verify if a comment position is valid."""
@@ -106,7 +111,7 @@ def verify_comment_position(llm: ChatOpenAI, file_path: str, line: int, patch: s
         Diff:
         {patch}""")
     ])
-    
+
     try:
         result = llm.invoke(prompt.format(
             file=file_path,
@@ -114,8 +119,9 @@ def verify_comment_position(llm: ChatOpenAI, file_path: str, line: int, patch: s
             patch=patch
         ))
         return result.content.strip().lower() == 'true'
-    except Exception:
+    except Exception as e:
         return False
+
 
 def get_file_content(repo, file_path: str, commit_sha: str) -> str:
     """Get the content of a file at a specific commit."""
@@ -124,6 +130,7 @@ def get_file_content(repo, file_path: str, commit_sha: str) -> str:
         return content.decoded_content.decode('utf-8')
     except Exception:
         return ""
+
 
 def get_pr_diff(repo: Repository.Repository, pr: PullRequest.PullRequest) -> List[Dict[str, Any]]:
     """Get the PR diff from GitHub."""
@@ -137,6 +144,7 @@ def get_pr_diff(repo: Repository.Repository, pr: PullRequest.PullRequest) -> Lis
         }
         for file in pr.get_files()
     ]
+
 
 def get_existing_comments(pr: PullRequest, file_path: str) -> List[Dict[str, Any]]:
     """Get existing review comments for a specific file in the PR."""
@@ -154,15 +162,16 @@ def get_existing_comments(pr: PullRequest, file_path: str) -> List[Dict[str, Any
             })
     return comments
 
+
 def get_position_from_line(patch: str, target_line: int) -> Optional[int]:
     """Get the position in diff from line number."""
     if not patch:
         return None
-        
+
     current_position = 0
     current_line = 0
     hunk_start = False
-    
+
     for line in patch.split('\n'):
         current_position += 1
         if line.startswith('@@'):
@@ -171,13 +180,14 @@ def get_position_from_line(patch: str, target_line: int) -> Optional[int]:
             if match:
                 current_line = int(match.group(1)) - 1
             continue
-        
+
         if hunk_start and not line.startswith('-'):
             current_line += 1
             if current_line == target_line:
                 return current_position
-    
+
     return None
+
 
 def clean_json_string(json_str: str) -> str:
     """Clean and format JSON string from LLM response."""
@@ -193,43 +203,45 @@ def clean_json_string(json_str: str) -> str:
 
     # Remove any leading/trailing whitespace
     json_str = json_str.strip()
-    
+
     # Remove any markdown code block markers
     json_str = re.sub(r'```json\s*|\s*```', '', json_str)
-    
+
     # Special handling for responses starting with newline and "comments"
     if json_str.startswith('\n'):
         json_str = json_str.lstrip()
-    
+
     # If it starts with "comments", wrap it in braces
     if json_str.startswith('"comments"'):
         json_str = '{' + json_str + '}'
     elif json_str.startswith('comments'):
         json_str = '{"' + json_str.replace('comments', '"comments"', 1) + '}'
-    
+
     # Ensure proper JSON structure
     if not json_str.startswith('{'):
         json_str = '{' + json_str + '}'
-    
+
     try:
         # Try to parse and format the JSON
         parsed = json.loads(json_str)
-        
+
         # Only add comments_to_delete for review responses
         if "comments" in parsed and "comments_to_delete" not in parsed:
             parsed["comments_to_delete"] = []
-            
+
         return json.dumps(parsed)
     except json.JSONDecodeError as e:
         logging.error(f"Failed to parse JSON after cleaning: {e}")
         # Return a valid empty response as fallback
         return '{"comments": []}'
 
-def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
+
+def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> (
+        Tuple)[List[CodeReviewComment], List[int]]:
     """Review code changes using LangChain and OpenAI."""
     llm_client = LLMClient()
     llm = llm_client.get_client()
-    
+
     parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
 
     prompt = ChatPromptTemplate.from_messages([
@@ -270,17 +282,18 @@ Existing comments:
 Diff to review:
 {code_diff}""")
     ])
-    
+
     comments = []
     comments_to_delete = set()
-    
+
     for file in diff_files:
         try:
             # Format existing comments
             existing_comments_text = "No existing comments."
             if file.get('existing_comments'):
                 existing_comments_text = "\n".join([
-                    f"Comment ID {comment['id']} at Line {comment['line']}: {comment['body']} (by {comment['user']} at {comment['created_at']})"
+                    f"Comment ID {comment['id']} at Line {comment['line']}: {comment['body']} (by {comment['user']} at "
+                    f"{comment['created_at']})"
                     for comment in file['existing_comments']
                 ])
 
@@ -303,18 +316,18 @@ Diff to review:
 
             # Get raw response from LLM
             raw_result = llm.invoke(formatted_prompt)
-            
+
             try:
                 # Parse the response using LangChain's parser
                 result = parser.parse(raw_result.content)
-                
+
                 # Validate comments
                 valid_comments = []
                 for comment in result.comments:
                     # Set the file path if not already set
                     if not comment.path:
                         comment.path = file['file']
-                        
+
                     if comment.line in file['line_mapping']:
                         if validate_comment_position(file['patch'], comment.line):
                             valid_comments.append(comment)
@@ -324,21 +337,22 @@ Diff to review:
                         logging.warning(f"⚠️ Rejected invalid line {comment.line} for file {file['file']}")
                     if comment.body == "":
                         logging.warning(f"⚠️ Rejected empty comment for file {file['file']}")
-                
+
                 comments.extend(valid_comments)
                 if result.comments_to_delete:
                     comments_to_delete.update(result.comments_to_delete)
-                    
+
             except Exception as e:
                 logging.error(f"Error processing file {file['file']}: {str(e)}")
                 logging.error(f"Raw response: {raw_result.content}")
                 continue
-                
+
         except Exception as e:
             logging.error(f"Error processing file {file['file']}: {str(e)}")
             continue
-    
+
     return comments, list(comments_to_delete)
+
 
 def main():
     """Main entry point for the GitHub Action."""
@@ -351,7 +365,7 @@ def main():
     pr_number = int(os.getenv('GITHUB_EVENT_NUMBER'))
     extra_prompt = os.getenv('INPUT_EXTRA_PROMPT', '')
     workspace = os.getenv('GITHUB_WORKSPACE', '.')
-    
+
     logging.info("🦦 Dr. OtterAI starting code review...")
 
     # Handle GitHub operations
@@ -359,16 +373,16 @@ def main():
     repo = g.get_repo(repo)
     pr = repo.get_pull(pr_number)
     get_commit = repo.get_commit(pr.head.sha)
-    
+
     # Generate project context
     project_context = generate_review_context(workspace)
 
     # Get PR changes
     diff_files = get_pr_diff(repo, pr)
-    
+
     # Review code with project context
     comments, comments_to_delete = review_code(diff_files, project_context, extra_prompt)
-    
+
     # Delete comments first
     for comment_id in comments_to_delete:
         try:
@@ -382,7 +396,7 @@ def main():
                             break
         except Exception as e:
             print(f"❌ Error deleting comment {comment_id}: {str(e)}")
-    
+
     # Add new comments
     for comment in comments:
         try:
@@ -411,18 +425,25 @@ def main():
         # Create fix PR
         from otterai.fix_generator import create_fix_pr
         fix_pr_url = create_fix_pr(repo, pr, files_to_fix, project_context)
-        
+
         if fix_pr_url:
-            pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge it if it's good.")
+            pr.create_issue_comment(
+                body=f"Hey @{pr.user.login}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge "
+                     f"it if it's good.")
             print(f"✨ Created fix PR: {fix_pr_url}")
         else:
-            pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
+            pr.create_issue_comment(
+                body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code "
+                     f"and create a fix PR manually.")
             print("⚠️ No fixes were generated")
     else:
-        pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
+        pr.create_issue_comment(
+            body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code and "
+                 f"create a fix PR manually.")
         print("⚠️ No fixes were generated")
 
     print("✨ Code review completed!")
 
+
 if __name__ == "__main__":
-    main() 
+    main()
