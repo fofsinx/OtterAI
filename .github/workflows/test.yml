@@ -9,19 +9,6 @@ on:
       - '.gitignore'
 
 jobs:
-  bash-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run bash tests
-        shell: sh
-        run: |
-          echo "Running bash tests..."
-          chmod +x tests/test_action_checks.sh
-          ./tests/test_action_checks.sh
-
   # Run tests
   tests:
     runs-on: ubuntu-latest
@@ -30,6 +17,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Run BASIC tests
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py'
 
       - name: Install dependencies
         run: |
