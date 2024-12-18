@@ -79,8 +79,13 @@ runs:
             print("🔍 Code review requested")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=true\n")
-    
-    - name: Add skip commen
+   
+    - name: Echo code review requested
+      shell: bash
+      run: |
+        echo "Code review requested: ${{ steps.check_if_review_requested.outputs.code_review_requested }}"
+
+    - name: Add skip comment if review is skipped
       if: steps.check_if_review_requested.outputs.code_review_requested == 'false'
       shell: bash
       env:
