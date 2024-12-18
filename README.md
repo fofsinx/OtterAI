@@ -14,22 +14,57 @@
 - 📝 Line-specific comments on code changes
 - 🤖 Auto-fix suggestions with new PRs
 - 🎯 Project-specific guidelines
-- 🚫 Skip review functionality with special PR titles
+- 🚫 Skip review functionality with special PR titles or descriptions
 
 ## 🛠️ How to Use
 
 ### 1. Skip Code Review (Optional)
-To skip the code review for specific PRs, include any of these patterns in your PR title:
+Dr. OtterAI can automatically skip reviews based on certain patterns in your PR title or description. Here's how to use it:
+
+#### 🎯 Skip Patterns
+You can use any of these patterns (case-insensitive):
+
 ```
-no-review: Update documentation
-skip review: Quick fix
-skip-code-review: Emergency patch
-otterai-skip: Configuration update
-otter skip: Minor changes
-otter-restricted: Sensitive update
+# Using hyphens
+no-review: Your message
+skip-review: Your message
+no-otter: Your message
+skip-otter: Your message
+no-otterai: Your message
+otter-no: Your message
+otter-bye: Your message
+otter-restricted: Your message
+
+# Multiple flags (comma-separated)
+no-review,skip-otter: Complex update
+skip-review,otter-restricted: Sensitive change
 ```
 
-The review will be skipped and Dr. OtterAI will leave a comment notifying the PR author.
+#### 🔄 Automatic Skip Conditions
+Reviews are automatically skipped when:
+- 🏷️ PR title contains any of the skip patterns
+- 📝 PR description contains any of the skip patterns
+- 🔒 PR state is 'merged' or 'closed'
+
+#### 📋 Example Usage
+```yaml
+# Skip review for documentation updates
+title: "no-review: Update README.md"
+
+# Skip review for sensitive changes
+title: "otter-restricted: Security patch"
+
+# Skip review with multiple flags
+title: "no-review,otter-restricted: Confidential update"
+
+# Regular PR (will be reviewed)
+title: "feat: Add new feature"
+```
+
+When a review is skipped:
+- 🦦 Dr. OtterAI will leave a comment notifying the PR author
+- ⏭️ No code review will be performed
+- 🚫 Dependencies won't be installed
 
 ### 2. Set up Secrets
 First, add the API key for your preferred LLM provider:
