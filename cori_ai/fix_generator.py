@@ -1,19 +1,22 @@
-import asyncio
-from typing import List, Dict, Any
-from github import Github, Repository, GithubException, PullRequest
+from typing import List, Dict, Any, Optional
+from github import Repository, GithubException, PullRequest
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel, Field
 import base64
-from datetime import datetime
 import logging
-import time
 
-from otterai.indexer import analyze_project_structure, index_codebase
 from otterai.llm_client import LLMClient
 
 # Initialize a lock to handle race conditions
 from threading import Lock
 lock = Lock()
+
+class CodeFix(BaseModel):
+    """Model for code fix response."""
+    file: str = Field(description="File path that was fixed")
+    content: str = Field(description="Complete fixed file content")
 
 def create_branch_name(pr_number: int) -> str:
     """Create a unique branch name for the fixes."""
@@ -30,8 +33,10 @@ def get_file_content(repo: Repository, file_path: str, ref: str) -> str:
         logging.error(f"Unexpected error getting file content: {str(e)}")
     return ""
 
-def generate_fix(llm: ChatOpenAI, file_path: str, original_content: str, review_comments: List[Dict[str, Any]]) -> str:
+def generate_fix(llm: ChatOpenAI, file_path: str, original_content: str, review_comments: List[Dict[str, Any]], analysis: str) -> str:
     """Generate fixed content for a file based on review comments."""
+    parser = PydanticOutputParser(pydantic_object=CodeFix)
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are Dr. OtterAI, a highly skilled code fixer specializing in addressing review comments with precision.
         
@@ -43,13 +48,11 @@ IMPORTANT GUIDELINES:
 5. Preserve the existing functionality of the code.
 6. Incorporate appropriate error handling as needed.
 7. Adhere to language-specific best practices and standards.
-8. Handle race conditions when writing to the same file. Do not modify which is working, just add the changes.
+8. Handle race conditions when writing to the same file.
 
 {analysis}
-         
-\n\n
-         
-Please return the complete fixed file content, including all necessary imports and dependencies."""),
+
+{format_instructions}"""),
         ("human", f"""Path: {file_path}
 
 Original Content:
@@ -58,31 +61,27 @@ Original Content:
 Review Comments:
 {''.join([f"Line {comment['line']}: {comment['body']}\n" for comment in review_comments])}
 
-Provide the revised content addressing all the above comments.""")
+Provide the fixed content addressing all the above comments.""")
     ])
 
     try:
-        response = llm.invoke(prompt.format())
-        fixed_content = extract_code_from_response(response.content, ['python', 'javascript', 'typescript', 
-                                                                        'go', 'rust', 'c', 'c++', 'c#', 'java', 'kotlin', 'swift', 'objective-c', 'php', 'ruby', 'perl', 'haskell', 'erlang', 'elixir', 'scala', 'groovy', 'groovy-lang', 'groovy-lang.org', 'groovy-lang.org.'])
-        return fixed_content if fixed_content else original_content
+        response = llm.invoke(prompt.format(
+            analysis=analysis,
+            format_instructions=parser.get_format_instructions()
+        ))
+        try:
+            # Parse the response using LangChain's parser
+            parsed_response = parser.parse(response.content)
+            return parsed_response.content
+        except Exception as e:
+            logging.error(f"Error parsing response: {str(e)}")
+            logging.error(f"Raw response: {response.content}")
+        
+        # Fallback to original content if parsing fails
+        return original_content
     except Exception as e:
         logging.error(f"Error generating fix: {str(e)}")
         return original_content
-
-def extract_code_from_response(response: str, languages: List[str]) -> str:
-    """Extract code block from LLM response."""
-    try:
-        if "```" in response:
-            parts = response.split("```")
-            for i in range(1, len(parts), 2):
-                lang = parts[i].split('\n')[0].strip()
-                if lang in languages:
-                    return '\n'.join(parts[i].split('\n')[1:])
-        return response.strip()
-    except Exception as e:
-        logging.error(f"Error extracting code from response: {str(e)}")
-        return ""
 
 def create_fix_pr(
     repo: Repository,
