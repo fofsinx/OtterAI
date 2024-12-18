@@ -79,13 +79,13 @@ runs:
                 f.write("code_review_requested=true\n")
     - name: Set up Python
       uses: actions/setup-python@v5
-      if: steps.check_if_review_requested.outputs.code_review_requested != 'true'
+      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       with:
         python-version: '3.12'
         cache: 'pip'
     
     - name: Install dependencies
-      if: steps.check_if_review_requested.outputs.code_review_requested != 'true'
+      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       shell: bash
       run: |
         python -m pip install --upgrade pip
@@ -93,7 +93,7 @@ runs:
 
     - name: Run OtterAI Code Review
       shell: bash
-      if: steps.check_if_review_requested.outputs.code_review_requested != 'true'
+      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       env:
         INPUT_PROVIDER: ${{ inputs.provider }}
         # OpenAI
