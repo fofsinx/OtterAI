@@ -1,6 +1,6 @@
 import asyncio
 from typing import List, Dict, Any
-from github import Github, Repository, GithubException
+from github import Github, Repository, GithubException, PullRequest
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import base64
@@ -85,21 +85,17 @@ def extract_code_from_response(response: str, languages: List[str]) -> str:
         return ""
 
 def create_fix_pr(
-    gh_token: str,
-    repo_name: str,
-    base_pr_number: int,
+    repo: Repository,
+    base_pr: PullRequest.PullRequest,
     files_to_fix: Dict[str, List[Dict[str, Any]]],
     analysis: str
 ) -> str:
     """Create a new PR with fixes for the review comments."""
-    g = Github(gh_token)
-    repo = g.get_repo(repo_name)
-    base_pr = repo.get_pull(base_pr_number)
     
     # Create a new branch from the head of the base PR with retry to handle race conditions
     for attempt in range(3):
         try:
-            new_branch = create_branch_name(base_pr_number)
+            new_branch = create_branch_name(base_pr.number)
             base_ref = base_pr.head.ref
             base_sha = base_pr.head.sha
             logging.info(f"Creating branch {new_branch} from {base_ref} with SHA {base_sha}")
@@ -162,7 +158,7 @@ Ensure the description includes:
 3. The types of fixes applied.
 4. Suggestions for testing the fixes.
 5. Recommended next steps if any."""),
-        ("human", f"""Base PR: #{base_pr_number}
+        ("human", f"""Base PR: #{base_pr.number}
 Files changed: {', '.join(files_changed)}
 Number of review comments addressed: {len(files_to_fix)}
 
@@ -181,7 +177,7 @@ Create a detailed PR description based on the above information.""")
         try:
             with lock:
                 fix_pr = repo.create_pull(
-                    title=f"🤖 Auto-fixes for PR #{base_pr_number}",
+                    title=f"🤖 Auto-fixes for PR #{base_pr.number}",
                     body=pr_description,
                     base=base_ref,
                     head=new_branch,
@@ -194,7 +190,7 @@ Create a detailed PR description based on the above information.""")
                 logging.warning(f"Pull request for branch {new_branch} already exists. Updating the existing PR.")
                 # update the existing PR
                 fix_pr = repo.get_pull(fix_pr.number)
-                fix_pr.update(state="open", title=f"🤖 Auto-fixes for PR #{base_pr_number}", body=pr_description)
+                fix_pr.update(state="open", title=f"🤖 Auto-fixes for PR #{base_pr.number}", body=pr_description)
                 return fix_pr.html_url
             logging.error(f"GitHub API error creating PR: {e.data.get('message', str(e))}")
             return ""
