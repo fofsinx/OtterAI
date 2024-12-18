@@ -57,7 +57,7 @@ runs:
       shell: bash
       env:
         PR_TITLE: ${{ github.event.pull_request.title }}
-        PATTERN: \b(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b
+        PATTERN: \\b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\\b
       run: |
         if echo "$PR_TITLE" | grep -Eiq "$PATTERN"; then
           echo "🦦 No review requested, skipping code review"
@@ -71,7 +71,7 @@ runs:
       shell: bash
       env:
         PR_STATE: ${{ github.event.pull_request.state }}
-        PATTERN: \b(?:merged|closed)\b
+        PATTERN: \\b(merged|closed)\\b
       run: |
         if echo "$PR_STATE" | grep -Eiq "$PATTERN"; then
           echo "🦦 PR is merged, skipping code review"
