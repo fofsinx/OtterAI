@@ -19,6 +19,9 @@
 ## 🛠️ How to Use
 
 ### 1. Skip Code Review (Optional)
+
+![Skip Code Review](/static/skip-code-review.png)
+
 Dr. OtterAI can automatically skip reviews based on certain patterns in your PR title or description. Here's how to use it:
 
 #### 🎯 Skip Patterns
