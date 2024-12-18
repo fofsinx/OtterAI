@@ -3,6 +3,7 @@
 🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart otter with multiple degrees in Computer Science! 🎓
 
 ![OtterAI](/static/otterai.png)
+![OtterAI](/static/image.png)
 
 ## ✨ Features
 
