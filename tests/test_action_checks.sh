@@ -2,14 +2,14 @@
 
 # Initialize error counter
 errors=0
+pattern="\b(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b"
 
 # Function to simulate the "Check if review is requested" step
 check_review_requested() {
   PR_TITLE="$1"
-  
-  if [[ "$PR_TITLE" =~ ^(no|skip)(-|\s)?review|skip(-|\s)?code(-|\s)?review|otter(ai)?(-|\s)?skip|otter(-|\s)?restricted ]]; then
+  if echo "$PR_TITLE" | grep -Eiq "$pattern"; then
     echo "🦦 No review requested, skipping code review"
-    return 0
+    return 1
   else
     echo "🔍 Code review requested"
     return 0
@@ -19,31 +19,56 @@ check_review_requested() {
 # Function to simulate the "Check if PR is merged" step
 check_pr_merged() {
   PR_STATE="$1"
+  pattern="\b(?:merged|closed)\b"
   
-  if [[ "$PR_STATE" == "merged" ]]; then
+  if echo "$PR_STATE" | grep -Eiq "$pattern"; then
     echo "🦦 PR is merged, skipping code review"
-    return 0
+    return 1
   else
     echo "🔍 PR is not merged, proceeding with code review"
     return 0
   fi
 }
 
-# Test Cases for Review Requested
+# Array of test descriptions and their expected outcomes
 review_descriptions=(
-  "Test1_no_review"
-  "Test2_skip_review"
-  "Test3_otterai_skip"
-  "Test4_otter_restricted"
-  "Test5_feature"
+  "Test1_NoReview"
+  "Test2_SkipReview"
+  "Test3_SkipOtter"
+  "Test4_NoOtterAI"
+  "Test5_OtterRestricted"
+  "Test6_OtterBye"
+  "Test7_MultipleFlags"
+  "Test8_StandardFeature"
+  "Test9_ConventionalCommit"
+  "Test10_BugFix"
+  "Test11_Documentation"
+  "Test12_Maintenance"
+  "Test13_Testing"
+  "Test14_CodeRefactor"
+  "Test15_Formatting"
+  "Test16_Performance"
+  "Test17_NoSkipFlags"
 )
 
 review_titles=(
-  "no-review needed"
-  "skip code review"
-  "otterai-skip"
-  "otter-restricted"
-  "feature enhancement"
+  "no-review: Update authentication system :false"
+  "Important security patch but skip-review please :false" 
+  "Refactor database layer with skip-otter flag :false"
+  "Backend optimization with no-otterai needed :false"
+  "Frontend changes otter-restricted due to sensitivity :false"
+  "Critical hotfix otter-bye emergency deploy :false"
+  "Infrastructure update no-review,skip-otter,otter-restricted :false"
+  "Add user management features and improve UI :true"
+  "feat: implement new logging system :true"
+  "fix: resolve authentication bug :true"
+  "docs: update API documentation :true"
+  "chore: upgrade dependencies :true"
+  "test: add integration tests :true"
+  "refactor: optimize database queries :true"
+  "style: format code according to standards :true"
+  "perf: improve loading times :true"
+  "This PR skips nothing :true"
 )
 
 # Test Cases for PR Merged
@@ -54,9 +79,9 @@ pr_descriptions=(
 )
 
 pr_states=(
-  "merged"
-  "open"
-  "closed"
+  "merged :false"
+  "open :true"
+  "closed :false"
 )
 
 echo "=============================="
@@ -71,15 +96,22 @@ for i in "${!review_descriptions[@]}"; do
   check_review_requested "$title"
   result=$?
   
-  if [[ "$description" =~ Test[1-4]* ]]; then
+  # Extract expected result from title (":true" or ":false")
+  expected_result=$(echo "$title" | grep -o ':\(true\|false\)$' | cut -d':' -f2)
+
+  echo "Expected result: $expected_result for $description"
+  
+  if [[ "$expected_result" == "true" ]]; then
+    # For titles that should trigger review
     if [[ $result -eq 0 ]]; then
       echo "✅ Passed"
     else
       echo "❌ Failed"
       ((errors++))
     fi
-  elif [[ "$description" =~ Test5* ]]; then
-    if [[ $result -ne 0 ]]; then
+  else
+    # For titles that should skip review
+    if [[ $result -eq 1 ]]; then
       echo "✅ Passed"
     else
       echo "❌ Failed"
@@ -93,6 +125,9 @@ echo "=============================="
 echo "Running PR State Check Tests"
 echo "=============================="
 
+# regex pattern for to match merged, open, closed
+pattern="\b(?:merged|closed)\b"
+
 # Execute PR Merged Test Cases
 for i in "${!pr_descriptions[@]}"; do
   description="${pr_descriptions[$i]}"
@@ -101,7 +136,11 @@ for i in "${!pr_descriptions[@]}"; do
   check_pr_merged "$state"
   result=$?
   
-  if [[ "$description" =~ TestA* ]]; then
+  # Extract expected result from state (":true" or ":false")
+  expected_result=$(echo "$state" | grep -o ':\(true\|false\)$' | cut -d':' -f2)
+  
+  if [[ "$expected_result" == "true" ]]; then
+    # For states that should trigger review
     if [[ $result -eq 0 ]]; then
       echo "✅ Passed"
     else
@@ -109,7 +148,8 @@ for i in "${!pr_descriptions[@]}"; do
       ((errors++))
     fi
   else
-    if [[ $result -ne 0 ]]; then
+    # For states that should skip review
+    if [[ $result -eq 1 ]]; then
       echo "✅ Passed"
     else
       echo "❌ Failed"
@@ -128,4 +168,4 @@ else
   echo "✅ All tests passed"
   exit 0
 fi
-echo "==============================" 
+echo "=============================="
