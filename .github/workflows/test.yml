@@ -34,9 +34,9 @@ jobs:
   code-review:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
-      actions: read
+      actions: write
       issues: write
     steps:
       - uses: actions/checkout@v4

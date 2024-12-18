@@ -106,8 +106,10 @@ jobs:
   review:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
+      actions: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - name: AI Code Review
