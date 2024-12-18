@@ -496,13 +496,13 @@ def main():
         fix_pr_url = create_fix_pr(repo, pr, files_to_fix, project_context)
         
         if fix_pr_url:
-            pr.create_issue_comment(body=f"Hey @{{{pr.user.login}}}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge it if it's good.")
+            pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge it if it's good.")
             print(f"✨ Created fix PR: {fix_pr_url}")
         else:
-            pr.create_issue_comment(body=f"Hey @{{{pr.user.login}}}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
+            pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
             print("⚠️ No fixes were generated")
     else:
-        pr.create_issue_comment(body=f"Hey @{{{pr.user.login}}}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
+        pr.create_issue_comment(body=f"Hey @{pr.user.login}! Dr. OtterAI didn't find any fixes to generate, please review the code and create a fix PR manually.")
         print("⚠️ No fixes were generated")
 
     print("✨ Code review completed!")
