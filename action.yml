@@ -59,7 +59,7 @@ runs:
         PR_TITLE: ${{ github.event.pull_request.title }}
         PR_STATE: ${{ github.event.pull_request.state }}
         MERGE_PATTERN: \b(?:merged|closed)\b
-        PATTERN: \\b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\\b
+        PATTERN: \b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b
       run: |
         import os
         import re
@@ -69,7 +69,7 @@ runs:
         merge_pattern = os.environ['MERGE_PATTERN']
         pr_state = os.environ['PR_STATE']
 
-        if re.search(pattern, pr_title, re.IGNORECASE) and not re.search(merge_pattern, pr_state, re.IGNORECASE):
+        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE):
             print("🦦 No review requested, skipping code review")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=false\n")
