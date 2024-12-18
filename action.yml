@@ -39,7 +39,7 @@ inputs:
   # Common settings
   github_token:
     description: 'GitHub token for PR access'
-    required: true
+    required: false
     default: ${{ github.token }}
   extra_prompt:
     description: 'Additional instructions for the AI reviewer'
