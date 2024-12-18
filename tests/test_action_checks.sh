@@ -2,7 +2,7 @@
 
 # Initialize error counter
 errors=0
-pattern="\b(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,(?:(?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b"
+pattern="\\b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\\b"
 
 # Function to simulate the "Check if review is requested" step
 check_review_requested() {
@@ -32,6 +32,7 @@ check_pr_merged() {
 
 # Array of test descriptions and their expected outcomes
 review_descriptions=(
+  "Test0_NoSkipFlags"
   "Test1_NoReview"
   "Test2_SkipReview"
   "Test3_SkipOtter"
@@ -52,6 +53,7 @@ review_descriptions=(
 )
 
 review_titles=(
+  "Me/the 17 support skippable prs no-review :false"
   "no-review: Update authentication system :false"
   "Important security patch but skip-review please :false" 
   "Refactor database layer with skip-otter flag :false"
