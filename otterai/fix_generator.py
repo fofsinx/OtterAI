@@ -1,8 +1,9 @@
 from typing import List, Dict, Any, Optional
 from github import Repository, GithubException, PullRequest
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
+from langchain.output_parsers.json import OutputParserException
 from pydantic import BaseModel, Field
 import base64
 import logging
@@ -16,7 +17,7 @@ lock = Lock()
 class CodeFix(BaseModel):
     """Model for code fix response."""
     file: str = Field(description="File path that was fixed")
-    content: str = Field(description="Complete fixed file content")
+    content: str = Field(description="Complete fixed file content with all necessary imports and dependencies")
 
 def create_branch_name(pr_number: int) -> str:
     """Create a unique branch name for the fixes."""
@@ -35,12 +36,14 @@ def get_file_content(repo: Repository, file_path: str, ref: str) -> str:
 
 def generate_fix(llm: ChatOpenAI, file_path: str, original_content: str, review_comments: List[Dict[str, Any]], analysis: str) -> str:
     """Generate fixed content for a file based on review comments."""
+    # Create the output parser
     parser = PydanticOutputParser(pydantic_object=CodeFix)
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are Dr. OtterAI, a highly skilled code fixer specializing in addressing review comments with precision.
+    # Create the prompt template
+    prompt = PromptTemplate(
+        template="""You are Dr. OtterAI, a highly skilled code fixer specializing in addressing review comments with precision.
         
-IMPORTANT GUIDELINES:
+IMPORTANT GUIDELINES FOR FIXING CODE do not deviate from these guidelines:
 1. Implement only the changes necessary to address the review comments provided.
 2. Maintain the original code style and formatting.
 3. Insert comments to explain significant changes for better code understanding.
@@ -49,38 +52,52 @@ IMPORTANT GUIDELINES:
 6. Incorporate appropriate error handling as needed.
 7. Adhere to language-specific best practices and standards.
 8. Handle race conditions when writing to the same file.
+9. DO NOT remove or modify any code that is not directly related to the review comments.
+10. Add proper comments in the code to explain why you made the changes.
 
+Project Analysis:
 {analysis}
 
-{format_instructions}"""),
-        ("human", f"""Path: {file_path}
+File to Fix: {file_path}
 
 Original Content:
 {original_content}
 
 Review Comments:
-{''.join([f"Line {comment['line']}: {comment['body']}\n" for comment in review_comments])}
+{review_comments}
 
-Provide the fixed content addressing all the above comments.""")
-    ])
+{format_instructions}
+
+Return the fixed code as a JSON object with 'file' and 'content' fields. Do not include code blocks in your response.""",
+        input_variables=["file_path", "original_content", "review_comments", "analysis"],
+        partial_variables={"format_instructions": parser.get_format_instructions()}
+    )
+
+    # Create the chain
+    chain = prompt | llm | parser
 
     try:
-        response = llm.invoke(prompt.format(
-            analysis=analysis,
-            format_instructions=parser.get_format_instructions()
-        ))
-        try:
-            # Parse the response using LangChain's parser
-            parsed_response = parser.parse(response.content)
-            return parsed_response.content
-        except Exception as e:
-            logging.error(f"Error parsing response: {str(e)}")
-            logging.error(f"Raw response: {response.content}")
+        # Format review comments
+        formatted_comments = "\n".join([
+            f"Line {comment['line']}: {comment['body']}"
+            for comment in review_comments
+        ])
+
+        # Invoke the chain
+        response = chain.invoke({
+            "file_path": file_path,
+            "original_content": original_content,
+            "review_comments": formatted_comments,
+            "analysis": analysis
+        })
         
-        # Fallback to original content if parsing fails
+        return response.content
+    except OutputParserException as e:
+        logging.error(f"Error parsing output for {file_path}: {e}")
+        logging.error("Falling back to original content")
         return original_content
     except Exception as e:
-        logging.error(f"Error generating fix: {str(e)}")
+        logging.error(f"Error generating fix for {file_path}: {e}")
         return original_content
 
 def create_fix_pr(
