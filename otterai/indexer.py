@@ -42,7 +42,7 @@ def get_file_type(file_path: str) -> Optional[str]:
         return 'github'
     elif ext in ['.dockerfile', '.dockerignore', '.docker-compose.yml', '.docker-compose.yaml', '.docker-compose.toml']:
         return 'docker'
-    elif ext in ['.npmrc', '.yarnrc', '.yarnrc.yml', '.yarnrc.yaml', '.yarnrc.json', '.yarnrc.toml', '.yarnrc.yaml', '.yarnrc.yml']:
+    elif ext in ['.npmrc', '.yarnrc', '.yarnrc.yml', '.yarnrc.yaml', '.yarnrc.json', '.yarnrc.toml']:
         return 'npm'
     return None
 
@@ -86,79 +86,4 @@ async def analyze_project_structure(index: Dict[str, List[str]], repo_root: str)
     llm = llm_client.get_client()
     
     prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a technical architect analyzing a codebase structure.
-Create a concise but comprehensive overview of the project structure and guidelines.
-Focus on:
-1. Project organization and architecture
-2. Key components and their relationships
-3. Coding standards and patterns observed
-4. Important dependencies and configurations
-5. Testing approach
-6. File types and their purpose
- 
-Steps:
-1. Read the codebase structure
-2. Read the key files' content
-3. Generate the analysis
-4. Strictly check which language is used in the codebase; do not mention any other language if not specified.
-5. Follow the best practices for the language used in the codebase.
-
-Do not use any other language than English. Do not leak any sensitive information.
-
-Keep the response focused and actionable for code review purposes."""),
-        ("human", """Here's the codebase structure:
-
-{index_summary}
-
-Key files content:
-{key_files_content}
-""")
-    ])
-    
-    # Read content of key files asynchronously
-    key_files = []
-    tasks = []
-    key_file_paths = [os.path.join(repo_root, 'README.md'), os.path.join(repo_root, '.editorconfig')]
-    
-    async def read_file(file_path: str):
-        if os.path.exists(file_path):
-            async with aiofiles.open(file_path, 'r') as f:
-                content = await f.read()
-                key_files.append((os.path.basename(file_path), content))
-    
-    for file_path in key_file_paths:
-        tasks.append(read_file(file_path))
-    
-    await asyncio.gather(*tasks)
-    
-    # Format index summary
-    index_summary = []
-    for file_type, files in index.items():
-        if files:
-            index_summary.append(f"\n{file_type.upper()} FILES:")
-            for file in sorted(files):
-                index_summary.append(f"- {file}")
-    
-    # Format key files content
-    key_files_content = []
-    for filename, content in key_files:
-        key_files_content.append(f"\n=== {filename} ===\n{content}")
-    
-    response = llm.invoke(prompt.format(
-        index_summary="\n".join(index_summary),
-        key_files_content="\n".join(key_files_content)
-    ))
-    
-    return response.content
-
-def generate_review_context(repo_root: str) -> str:
-    """Generate the complete context for code review."""
-    index = index_codebase(repo_root)
-    analysis = asyncio.run(analyze_project_structure(index, repo_root))
-    
-    return f"""PROJECT CONTEXT AND GUIDELINES
-
-{analysis}
-
-When reviewing/writing code, ensure they align with the project structure and guidelines outlined above.
-Focus on maintaining consistency with the existing patterns while suggesting improvements where appropriate.""" 
+        ("system", """You are a technical architect analyzing a codebase
