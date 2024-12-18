@@ -493,7 +493,7 @@ def main():
 
         # Create fix PR
         from cori_ai.fix_generator import create_fix_pr
-        fix_pr_url = create_fix_pr(github_token, repo.name, pr_number, files_to_fix, project_context)
+        fix_pr_url = create_fix_pr(repo, pr, files_to_fix, project_context)
         
         if fix_pr_url:
             pr.create_issue_comment(body=f"Hey @${{ github.event.pull_request.user.login }}! Dr. OtterAI created a fix PR: {fix_pr_url}, please review it and merge it if it's good.")
