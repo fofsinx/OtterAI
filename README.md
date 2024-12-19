@@ -8,7 +8,16 @@ Example: [CoriAI PR](https://github.com/theboringhumane/cori-ai/pull/13)
 
 ![✨ CoriAI](/static/otterai.png)
 
-## ✨ Features
+- 🤖 Automated code review using various LLM providers (OpenAI, Google Gemini, Groq, Mistral)
+- 🔍 Detailed feedback on:
+  - Security vulnerabilities and best practices
+  - Performance optimizations
+  - Code quality and maintainability
+  - Test coverage and testing practices
+  - Documentation completeness
+- 🛠️ Automatic fix generation (optional)
+- 🎯 Skip patterns for PRs that don't need review
+- 🔧 Highly configurable through environment variables
 
 - 🔍 Automated code review comments on pull requests
 - 🧠 Multiple LLM providers support (OpenAI, Gemini, Groq, Mistral)
@@ -154,108 +163,58 @@ First, add the API key for your preferred LLM provider:
 
 #### OpenAI (Default)
 ```bash
-OPENAI_API_KEY=your-openai-key
+pip install otterai
 ```
 
-#### Google Gemini
-```bash
-GOOGLE_API_KEY=your-gemini-key
-```
+## Usage
 
-#### Groq
-```bash
-GROQ_API_KEY=your-groq-key
-```
+### GitHub Action
 
-#### Mistral
-```bash
-MISTRAL_API_KEY=your-mistral-key
-```
-
-### 3. Create Workflow File
-Create `.github/workflows/code-review.yml` with:
+Add this to your repository's `.github/workflows/review.yml`:
 
 ```yaml
-name: AI Code Review
+name: OtterAI Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 jobs:
   review:
+    name: Review Pull Request
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-      actions: write
-      issues: write
+    
     steps:
       - uses: actions/checkout@v4
       - name: AI Code Review
         uses: theboringhumane/cori-ai@v1.2.0
         with:
-          # Choose your preferred provider
-          provider: 'openai'  # or 'gemini', 'groq', 'mistral'
-          
-          # Provider-specific settings
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          # or
-          # google_api_key: ${{ secrets.GOOGLE_API_KEY }}
-          # or
-          # groq_api_key: ${{ secrets.GROQ_API_KEY }}
-          # or
-          # mistral_api_key: ${{ secrets.MISTRAL_API_KEY }}
-          
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 4. Provider-Specific Configurations
+### Configuration
 
-#### OpenAI
-```yaml
-with:
-  provider: 'openai'
-  openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-  model: 'gpt-4-turbo-preview'  # Optional, default model
-  openai_base_url: 'https://api.openai.com/v1'  # Optional, for custom endpoints
-```
-
-#### Google Gemini
-```yaml
-with:
-  provider: 'gemini'
-  google_api_key: ${{ secrets.GOOGLE_API_KEY }}
-  model: 'gemini-1.5-flash'  # Optional, default model
-```
-
-#### Groq
-```yaml
-with:
-  provider: 'groq'
-  groq_api_key: ${{ secrets.GROQ_API_KEY }}
-  model: 'mixtral-8x7b-32768'  # Optional, default model
-```
-
-#### Mistral
-```yaml
-with:
-  provider: 'mistral'
-  mistral_api_key: ${{ secrets.MISTRAL_API_KEY }}
-  model: 'mistral-large-latest'  # Optional, default model
-```
-
-### 5. Customize Review Focus (Optional)
-Add specific focus areas for the review:
+The action can be configured using various inputs:
 
 ```yaml
-with:
-  # ... provider settings ...
-  extra_prompt: |
-    Focus on:
-    - Security best practices
-    - Performance optimizations
-    - Code maintainability
+- uses: harshvardhangoswami/otterai@v1
+  with:
+    # Required
+    openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    
+    # Optional
+    provider: openai  # openai, gemini, groq, or mistral
+    model: gpt-4-turbo-preview  # Provider-specific model
+    skip_fixes: false  # Skip automatic fix generation
+    skip_generated_pr_review: true  # Skip generated PR review
+    extra_prompt: |
+      Focus on:
+      - Security vulnerabilities
+      - Performance optimizations
+      - Code quality
 ```
 
 ### 6. Auto-Fix Feature
@@ -276,40 +235,64 @@ with:
   > This will be a guide for the developer to understand the feature and how to build it
   > cori-ai will suggest the best way to build the feature and the best practices to follow
 
-## 🎓 Default Models by Provider
+You can skip the review for specific PRs by:
 
-| Provider | Default Model | Alternative Options |
-|----------|---------------|-------------------|
-| OpenAI | gpt-4-turbo-preview | gpt-4, gpt-3.5-turbo |
-| Gemini | gemini-1.5-flash | gemini-1.5-pro | xyz |
-| Groq | mixtral-8x7b-32768 | llama2-70b-4096 | xyz |
-| Mistral | mistral-large-latest | mistral-medium, mistral-small | xyz |
+1. Adding skip patterns to the PR title:
+   - `no-review`
+   - `skip-review`
+   - `otter-skip`
+   - `otter-restricted`
 
-## 🔒 Security Best Practices
+2. PR state patterns that skip review:
+   - `merged`
+   - `closed`
 
-1. Store API keys securely in GitHub Secrets
-2. Use repository-specific tokens
-3. Set appropriate permissions in workflow
-4. Review auto-generated fixes before merging
+### Environment Variables
 
-## 🐛 Troubleshooting
+The tool can be configured using environment variables with the `INPUT_` prefix:
 
-### Common Issues
-1. **API Key Issues**: Ensure the correct API key is set for your chosen provider
-2. **Model Availability**: Some models might be region-restricted
-3. **Rate Limits**: Consider using different providers during high load
+- `INPUT_PROVIDER`: LLM provider to use
+- `INPUT_MODEL`: Model to use
+- `INPUT_OPENAI_API_KEY`: OpenAI API key
+- `INPUT_GOOGLE_API_KEY`: Google API key
+- `INPUT_GROQ_API_KEY`: Groq API key
+- `INPUT_MISTRAL_API_KEY`: Mistral API key
+- `INPUT_SKIP_FIXES`: Skip fix generation
+- `INPUT_SKIP_GENERATED_PR_REVIEW`: Skip generated PR review
+- `INPUT_EXTRA_PROMPT`: Additional instructions for the AI reviewer
+- `INPUT_LOG_LEVEL`: Logging level
 
-### Provider Status
-- OpenAI: [status.openai.com](https://status.openai.com)
-- Gemini: [status.generativeai.google](https://status.generativeai.google)
-- Groq: [status.groq.com](https://status.groq.com)
-- Mistral: [status.mistral.ai](https://status.mistral.ai)
+## Development
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/harshvardhangoswami/otterai.git
+   cd otterai
+   ```
+
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/macOS
+   # or
+   .\venv\Scripts\activate  # Windows
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Run tests:
+   ```bash
+   pytest
+   ```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Acknowledgments
+## Contributing
 
 - Thanks to all LLM providers for their amazing models
 - Thanks to GitHub for their platform

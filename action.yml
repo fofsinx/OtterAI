@@ -7,33 +7,34 @@ branding:
   color: 'purple'
 
 inputs:
+  pr_number:
+    description: 'Pull request number'
+    required: true
+  
   provider:
-    description: 'LLM provider to use (openai, gemini, groq, mistral, ollama)'
+    description: 'LLM provider to use (openai, gemini, groq, or mistral, or anthropic, or ollama)'
     required: false
     default: 'openai'
   
-  # OpenAI settings
   openai_api_key:
-    description: 'OpenAI API key (required if using OpenAI)'
+    description: 'OpenAI API key'
     required: false
+  
   openai_base_url:
-    description: 'OpenAI API base URL (optional)'
+    description: 'OpenAI API base URL'
     required: false
     default: 'https://api.openai.com/v1'
   
-  # Google Gemini settings
   google_api_key:
-    description: 'Google API key (required if using Gemini)'
+    description: 'Google API key'
     required: false
   
-  # Groq settings
   groq_api_key:
-    description: 'Groq API key (required if using Groq)'
+    description: 'Groq API key'
     required: false
   
-  # Mistral settings
   mistral_api_key:
-    description: 'Mistral API key (required if using Mistral)'
+    description: 'Mistral API key'
     required: false
   
   # Ollama settings
@@ -74,10 +75,6 @@ inputs:
     description: 'Author of the pull request'
     required: false
     default: ${{ github.event.pull_request.user.login }}
-  pr_number:
-    description: 'Number of the pull request'
-    required: false
-    default: ${{ github.event.number }}
   github_repository:
     description: 'Repository of the pull request'
     required: false
@@ -86,10 +83,16 @@ inputs:
     description: 'Skip fix generation'
     required: false
     default: 'false'
+  
   skip_generated_pr_review:
     description: 'Skip generated PR review'
     required: false
     default: 'true'
+  
+  log_level:
+    description: 'Logging level'
+    required: false
+    default: 'INFO'
 
 runs:
   using: 'composite'
@@ -209,6 +212,8 @@ runs:
         echo "🎉 Code review complete! 🎉"
         echo "🐟 Fishy code review results! 🐟"
       env:
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
         INPUT_PROVIDER: ${{ inputs.provider }}
         INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         INPUT_OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
