@@ -5,9 +5,9 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, field_validator
-from otterai.indexer import generate_review_context
+from cori_ai.indexer import generate_review_context
 from dotenv import load_dotenv
-from otterai.llm_client import LLMClient  # Import the singleton client
+from cori_ai.llm_client import LLMClient  # Import the singleton client
 import re
 import threading
 import json

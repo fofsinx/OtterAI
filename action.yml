@@ -1,10 +1,10 @@
-name: '🦦 Dr. OtterAI Code Review, PhD'
-description: '🤖 AI-powered code reviews for pull requests using GPT models, by a smart otter with a PhD! 🎓'
-author: 'fofsinx'
+name: '✨ CoriAI Code Review, PhD'
+description: '🤖 AI-powered code reviews for pull requests using LLMs, by a smart human with a PhD! 🎓'
+author: 'theboringhumane'
 
 branding:
-  icon: 'code'
-  color: 'yellow'
+  icon: 'anchor'
+  color: 'purple'
 
 inputs:
   provider:
@@ -61,7 +61,7 @@ runs:
         PR_DESCRIPTION: ${{ github.event.pull_request.body }}
         PR_STATE: ${{ github.event.pull_request.state }}
         MERGE_PATTERN: \b(?:merged|closed)\b
-        PATTERN: \b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b
+        PATTERN: \b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b
       run: |
         import os
         import re
@@ -127,9 +127,9 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install -r ${{ github.action_path }}/requirements.txt
+        pip install cori-ai
 
-    - name: Run OtterAI Code Review
+    - name: Run CoriAI Code Review
       shell: bash
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       env:
@@ -151,4 +151,4 @@ runs:
         GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
       run: |
-        python -m otterai.main
+        python -m cori-ai.main

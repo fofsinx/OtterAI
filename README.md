@@ -1,6 +1,6 @@
-# 🦦 Dr. OtterAI Code Review, PhD
+# ✨ CoriAI Code Review, PhD
 
-🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart otter with multiple degrees in Computer Science! 🎓
+🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart human with multiple degrees in Computer Science! 🎓
 
 ![OtterAI](/static/otterai.png)
 ![OtterAI](/static/image.png)
@@ -22,7 +22,7 @@
 
 ![Skip Code Review](/static/skip-code-review.png)
 
-Dr. OtterAI can automatically skip reviews based on certain patterns in your PR title or description. Here's how to use it:
+✨ CoriAI can automatically skip reviews based on certain patterns in your PR title or description. Here's how to use it:
 
 #### 🎯 Skip Patterns
 You can use any of these patterns (case-insensitive):
@@ -31,16 +31,17 @@ You can use any of these patterns (case-insensitive):
 # Using hyphens
 no-review: Your message
 skip-review: Your message
-no-otter: Your message
-skip-otter: Your message
-no-otterai: Your message
-otter-no: Your message
-otter-bye: Your message
-otter-restricted: Your message
+no-cori: Your message
+skip-cori: Your message
+no-coriai: Your message
+skip-coriai: Your message
+cori-no: Your message
+cori-bye: Your message
+cori-restricted: Your message
 
 # Multiple flags (comma-separated)
-no-review,skip-otter: Complex update
-skip-review,otter-restricted: Sensitive change
+no-review,skip-cori: Complex update
+skip-review,cori-restricted: Sensitive change
 ```
 
 #### 🔄 Automatic Skip Conditions
@@ -55,17 +56,17 @@ Reviews are automatically skipped when:
 title: "no-review: Update README.md"
 
 # Skip review for sensitive changes
-title: "otter-restricted: Security patch"
+title: "cori-restricted: Security patch"
 
 # Skip review with multiple flags
-title: "no-review,otter-restricted: Confidential update"
+title: "no-review,cori-restricted: Confidential update"
 
 # Regular PR (will be reviewed)
 title: "feat: Add new feature"
 ```
 
 When a review is skipped:
-- 🦦 Dr. OtterAI will leave a comment notifying the PR author
+- ✨ CoriAI will leave a comment notifying the PR author
 - ⏭️ No code review will be performed
 - 🚫 Dependencies won't be installed
 
@@ -111,7 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: AI Code Review
-        uses: fofsinx/otterai@v1.0.0
+        uses: theboringhumane/cori-ai@v1.2.0
         with:
           # Choose your preferred provider
           provider: 'openai'  # or 'gemini', 'groq', 'mistral'
@@ -177,7 +178,7 @@ with:
 ```
 
 ### 6. Auto-Fix Feature
-Dr. OtterAI will:
+✨ CoriAI will:
 1. Review your code changes
 2. Add detailed comments
 3. Create a new PR with suggested fixes (coming soon)
@@ -192,7 +193,7 @@ Dr. OtterAI will:
   > This will be a summary of the PR and the changes made
 8. Generate feature guide for the PR (coming soon)
   > This will be a guide for the developer to understand the feature and how to build it
-  > otter will suggest the best way to build the feature and the best practices to follow
+  > cori-ai will suggest the best way to build the feature and the best practices to follow
 
 ## 🎓 Default Models by Provider
 
@@ -231,17 +232,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Thanks to all LLM providers for their amazing models
 - Thanks to GitHub for their platform
-- Thanks to the otter who created this action (and their PhD committee)
+- Thanks to the human who created this action (and their PhD committee)
 
 ## 🦦 Support
 
 - 📧 Email: thehuman@boring.name
-- 🐙 GitHub Issues: [Create an issue](https://github.com/fofsinx/otterai/issues)
+- 🐙 GitHub Issues: [Create an issue](https://github.com/theboringhumane/cori-ai/issues)
 - 🦦 Otter Signal: *splashes water playfully*
 
 ---
 
-Made with 💖 by Dr. OtterAI, PhD in Computer Science, Machine Learning, and Fish Recognition
+Made with 💖 by @theboringhumane, PhD in Computer Science, Machine Learning, and Fish Recognition
 
 
 

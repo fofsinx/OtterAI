@@ -6,7 +6,7 @@ import sys
 
 class TestActionChecks(unittest.TestCase):
     def setUp(self):
-        self.review_pattern = r"\b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b"
+        self.review_pattern = r"\b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b"
         self.pr_state_pattern = r"\b(?:merged|closed)\b"
 
     def check_review_requested(self, pr_title):
@@ -30,11 +30,11 @@ class TestActionChecks(unittest.TestCase):
             ("Test0_NoSkipFlags", "Me/the 17 support skippable prs no-review", False),
             ("Test1_NoReview", "no-review: Update authentication system", False),
             ("Test2_SkipReview", "Important security patch but skip-review please", False),
-            ("Test3_SkipOtter", "Refactor database layer with skip-otter flag", False),
-            ("Test4_NoOtterAI", "Backend optimization with no-otterai needed", False),
-            ("Test5_OtterRestricted", "Frontend changes otter-restricted due to sensitivity", False),
-            ("Test6_OtterBye", "Critical hotfix otter-bye emergency deploy", False),
-            ("Test7_MultipleFlags", "Infrastructure update no-review,skip-otter,otter-restricted", False),
+            ("Test3_SkipCori", "Refactor database layer with skip-cori flag", False),
+            ("Test4_NoCoriAI", "Backend optimization with no-coriai needed", False),
+            ("Test5_CoriRestricted", "Frontend changes cori-restricted due to sensitivity", False),
+            ("Test6_CoriBye", "Critical hotfix cori-bye emergency deploy", False),
+            ("Test7_MultipleFlags", "Infrastructure update no-review,skip-cori,cori-restricted", False),
             ("Test8_StandardFeature", "Add user management features and improve UI", True),
             ("Test9_ConventionalCommit", "feat: implement new logging system", True),
             ("Test10_BugFix", "fix: resolve authentication bug", True),
