@@ -115,6 +115,11 @@ runs:
           echo "Skip comment already exists"
         fi
     
+    - name: Create empty files
+      shell: bash
+      run: |
+        touch requirements.txt
+        
     - name: Set up Python
       uses: actions/setup-python@v5
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
