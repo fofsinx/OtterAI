@@ -12,7 +12,12 @@ def should_ignore_file(file_path: str) -> bool:
     ignore_patterns = [
         '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
         '*.min.js', '*.min.css', '*.map', '*.lock', '*.sum',
-        'dist/*', 'build/*', '.env*', '*.log'
+        'dist/*', 'build/*', '.env*', '*.log',
+        # Swift specific
+        '*.xcodeproj/*', '*.xcworkspace/*', 'Pods/*', '*.xcuserstate',
+        # Flutter specific
+        '.dart_tool/*', '.flutter-plugins', '.flutter-plugins-dependencies',
+        'build/*', '.pub-cache/*', '.pub/*', 'ios/Pods/*', 'android/.gradle/*'
     ]
     return any(fnmatch.fnmatch(file_path, pattern) for pattern in ignore_patterns)
 
