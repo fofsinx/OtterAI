@@ -19,19 +19,19 @@ def should_ignore_file(file_path: str) -> bool:
 def get_file_type(file_path: str) -> Optional[str]:
     """Get the type of file based on extension and content."""
     ext = Path(file_path).suffix.lower()
-    if ext in ['.py', '.js', '.ts', '.java', '.cpp', '.go', '.rs']:
+    if ext in ['.py', '.js', '.ts', '.java', '.cpp', '.go', '.rs', '.swift', '.dart', '.flutter']:
         return 'source'
-    elif ext in ['.md', '.txt', '.rst']:
+    elif ext in ['.md', '.txt', '.rst', '.markdown']:
         return 'documentation'
     elif ext in ['.json', '.yaml', '.yml', '.toml']:
         return 'config'
-    elif ext in ['.html', '.css', '.scss', '.less']:
+    elif ext in ['.html', '.css', '.scss', '.less', '.vue', '.svelte', '.astro', '.jsx', '.tsx']:
         return 'frontend'
     elif ext in ['.sql', '.graphql']:
         return 'data'
-    elif ext in ['.test.js', '.test.ts', '.spec.py', '_test.go', '.spec.js', '.spec.ts']:
+    elif ext in ['.test.js', '.test.ts', '.spec.py', '_test.go', '.spec.js', '.spec.ts', '.test.dart', '.test.swift', '.test.py', '.test.java', '.test.cpp', '.test.go', '.test.rs', '.test.swift', '.test.dart', '.test.flutter']:
         return 'test'
-    elif ext in ['.env', '.env.*']:
+    elif ext in ['.env', '.env.*', '.env.local', '.env.development', '.env.production', '.env.staging', '.env.test', '.env.development.local', '.env.production.local', '.env.staging.local', '.env.test.local']:
         return 'environment'
     elif ext in ['.gitignore', '.dockerignore']:
         return 'ignore'
