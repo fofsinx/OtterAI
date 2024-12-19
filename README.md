@@ -2,8 +2,10 @@
 
 🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart human with multiple degrees in Computer Science! 🎓
 
-![OtterAI](/static/otterai.png)
-![OtterAI](/static/image.png)
+[Cori Repo]https://github.com/theboringhumane/cori-ai
+
+![✨ CoriAI](/static/otterai.png)
+![✨ CoriAI](/static/image.png)
 
 ## ✨ Features
 

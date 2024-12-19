@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m unittest discover -s otterai/tests -p 'test_*.py'
+          python -m unittest discover -s cori_ai/tests -p 'test_*.py'
 
   
   code-review:
@@ -43,7 +43,7 @@ jobs:
         with:
           fetch-depth: 0  # Required to get full history for better context
 
-      - name: OtterAI Code Review
+      - name: CoriAI ✨ Code Review
         uses: ./  # Uses the action from the current repository
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
