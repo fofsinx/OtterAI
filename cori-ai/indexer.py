@@ -2,12 +2,11 @@ import os
 from typing import Dict, List, Optional
 from pathlib import Path
 import fnmatch
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-import httpx
 import asyncio
 import aiofiles
-from otterai.llm_client import LLMClient
+from cori_ai.llm_client import LLMClient
+
 def should_ignore_file(file_path: str) -> bool:
     """Check if file should be ignored in indexing."""
     ignore_patterns = [
