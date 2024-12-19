@@ -15,14 +15,14 @@ except FileNotFoundError:
 
 setup(
     name="cori-ai",
-    version="0.1.0",
+    version="0.1.1",
     description="An AI-powered code review assistant",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="The Boring Human",
     author_email="human@theboring.human",
     url="https://github.com/theboringhumane/cori-ai",
-    packages=['cori-ai'],
+    packages=['cori_ai'],
     install_requires=requirements,
     python_requires=">=3.12",
     classifiers=[
