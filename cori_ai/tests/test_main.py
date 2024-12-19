@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 import json
-from cori_ai.main import (
+from cori_ai.review import (
     clean_json_string, 
     review_code, 
     CodeReviewComment, 

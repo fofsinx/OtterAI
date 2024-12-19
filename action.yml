@@ -156,4 +156,4 @@ runs:
         GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
       run: |
-        python -m cori_ai.main
+        python -m cori_ai.review
