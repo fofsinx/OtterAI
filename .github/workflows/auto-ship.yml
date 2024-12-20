@@ -104,6 +104,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install build twine
+      
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+        with:
+          strip_v: true
 
       - name: Update version
         env:
@@ -111,7 +117,7 @@ jobs:
         run: |
           # Extract version from git tag
           # get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0)
+          LATEST_TAG=${{steps.tag.outputs.tag}}
           # Update versions in files
           sed -i "s/version = \".*\"/version = \"${LATEST_TAG}\"/" pyproject.toml
 
