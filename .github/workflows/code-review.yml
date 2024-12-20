@@ -31,12 +31,8 @@ jobs:
           python -m unittest discover -s cori_ai/tests -p 'test_*.py'
 
   code-review:
+    needs: tests
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      actions: read
-      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,10 +48,9 @@ jobs:
       - name: CoriAI ✨ Code Review
         uses: ./ # Uses the action from the current repository
         with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
           github_token: ${{ steps.generate-token.outputs.token }}
-          model: "gpt-4o-mini"
+          provider: "ollama-local"
+          model: codellama:7b
           extra_prompt: |
             Please focus on:
             - Python best practices and PEP8 compliance
@@ -64,3 +59,6 @@ jobs:
             - Code maintainability and documentation
             - Potential edge cases and error handling 
             - Use emojis in your comments and be very specific.
+            - Use markdown in your comments.
+            - Use code blocks in your comments.
+            - Use inline code in your comments.
