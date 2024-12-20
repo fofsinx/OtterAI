@@ -187,11 +187,8 @@ runs:
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review"
     
     - name: Review Code with CoriAI ✨
-      uses: actions/setup-python@v5
+      shell: python
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
-      with:
-        python-version: '3.12'
-        cache: 'pip'
       run: |
         echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️"
         pip install --no-cache-dir cori-ai --upgrade pip
