@@ -87,6 +87,17 @@ runs:
   using: 'composite'
 
   steps:
+    
+    - name: Skip if has skip-review label
+      id: check_if_skip_review_label
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh pr view ${{ inputs.pr_number }} --json labels | grep -o '"name": *"skip-review"' || true
+        echo "SKIP_REVIEW_LABEL=$?" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
     - name: Check if review is requested
       id: check_if_review_requested
       shell: python
@@ -97,6 +108,11 @@ runs:
         MERGE_PATTERN: \b(?:merged|closed)\b
         PATTERN: \b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b
       run: |
+        if [ ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }} -eq 0 ]; then
+          echo "🦦 No review requested, skipping code review"
+          echo "code_review_requested=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
         import os
         import re
 
