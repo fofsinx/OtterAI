@@ -17,7 +17,7 @@ Example: [CoriAI PR](https://github.com/theboringhumane/cori-ai/pull/13)
 - 📝 Line-specific comments on code changes
 - 🤖 Auto-fix suggestions with new PRs
 - 🎯 Project-specific guidelines
-- 🚫 Skip review functionality with special PR titles or descriptions
+- 🚫 Skip review functionality with special PR titles or descriptions or labels (skip-review)
 
 ![✨ CoriAI](/static/pr-description.png)
 
