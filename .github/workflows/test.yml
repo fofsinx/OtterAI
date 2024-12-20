@@ -4,9 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.gitignore'
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
 
 jobs:
   # Run tests
@@ -30,7 +30,6 @@ jobs:
         run: |
           python -m unittest discover -s cori_ai/tests -p 'test_*.py'
 
-  
   code-review:
     runs-on: ubuntu-latest
     permissions:
@@ -41,15 +40,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required to get full history for better context
+          fetch-depth: 0 # Required to get full history for better context
+
+      - name: Cori Auth Step
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CORI_APP_ID }}
+          private-key: ${{ secrets.CORI_APP_PRIVATE_KEY }}
 
       - name: CoriAI ✨ Code Review
-        uses: ./  # Uses the action from the current repository
+        uses: ./ # Uses the action from the current repository
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          model: 'gpt-4o-mini'
+          github_token: ${{ steps.generate-token.outputs.token }}
+          model: "gpt-4o-mini"
           extra_prompt: |
             Please focus on:
             - Python best practices and PEP8 compliance
