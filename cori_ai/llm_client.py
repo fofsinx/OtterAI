@@ -55,7 +55,7 @@ class LLMClient:
     def _init_ollama(self) -> BaseChatModel:
         """Initialize Ollama client."""
         return ChatOllama(
-            model=os.getenv('INPUT_MODEL', 'codegemma'),
+            model=os.getenv('INPUT_MODEL', 'codellama:7b'),
             base_url=os.getenv('INPUT_OLLAMA_BASE_URL', 'http://localhost:11434'),
             api_key=os.getenv('INPUT_OLLAMA_API_KEY'),
             temperature=0.1
@@ -76,7 +76,7 @@ class LLMClient:
                 self._client = self._init_groq()
             elif provider == 'mistral':
                 self._client = self._init_mistral()
-            elif provider == 'ollama-local' or provider == 'ollama-cloud':
+            elif provider == 'ollama':
                 self._client = self._init_ollama()
             else:
                 logging.error(f"Unsupported provider: {provider}, falling back to OpenAI")
