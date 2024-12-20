@@ -6,14 +6,14 @@ ls -la /github/workspace
 # Check if review should be skipped based on PR title, description and state
 check_skip_patterns() {
     local text="$1"
-    local skip_patterns="(no|skip)(-|[[:space:]])?(review|cori|coriai)|cori(-|[[:space:]])?(no|bye|restricted)"
+    local skip_patterns="\b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b"
     echo "$text" | grep -iE "$skip_patterns" > /dev/null
     return $?
 }
 
 check_state_patterns() {
     local state="$1" 
-    local state_patterns="merged|closed"
+    local state_patterns="\b(?:merged|closed)\b"
     echo "$state" | grep -iE "$state_patterns" > /dev/null
     return $?
 }
