@@ -73,18 +73,18 @@ runs:
         pr_state = os.environ['PR_STATE']
 
         if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE):
-            print("🦦 No review requested, skipping code review")
+            print("🦦 Otter taking a coffee break - no review needed! ☕")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=false\n")
         else:
-            print("🔍 Code review requested")
+            print("🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=true\n")
    
     - name: Echo code review requested
       shell: bash
       run: |
-        echo "Code review requested: ${{ steps.check_if_review_requested.outputs.code_review_requested }}"
+        echo "🎭 The verdict is in! Review status: ${{ steps.check_if_review_requested.outputs.code_review_requested }} 🎬"
 
     - name: Add skip comment if review is skipped
       if: steps.check_if_review_requested.outputs.code_review_requested == 'false'
@@ -93,7 +93,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         PR_NUMBER: ${{ github.event.number }}
-        COMMENT: "Hey @${{ github.event.pull_request.user.login }}! 🦦 Code review skipped based on PR title/description pattern or PR state. Hope you have a great day! 🐞"
+        COMMENT: "Hey @${{ github.event.pull_request.user.login }}! 🦦 Looks like you've requested a vacation from code review! I'll be chilling with my fish friends instead! 🐠 Have a splashing good day! 🌊"
       run: |
         # First check if comment already exists
         EXISTING_COMMENTS=$(curl -L \
@@ -112,12 +112,13 @@ runs:
             "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
             -d "{\"body\":\"$COMMENT\"}"
         else
-          echo "Skip comment already exists"
+          echo "🦜 Looks like I already left my mark here! No need to repeat myself! 🤐"
         fi
     
     - name: Create empty files
       shell: bash
       run: |
+        echo "📝 Creating blank canvas for our masterpiece! 🎨"
         touch requirements.txt
         
     - name: Set up Python
@@ -133,12 +134,15 @@ runs:
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
+        echo "🐍 Time to charm some pythons and install their friends! 🎭"
         python -m pip install --upgrade pip
+        echo "🌱 Creating a cozy virtual environment for our code to live in! 🏠"
         pip install virtualenv
         python -m venv cori-ai-env
         source cori-ai-env/bin/activate
+        echo "🚀 Installing cori-ai - because every otter needs their tools! 🔧"
         pip install cori-ai
-        echo "Installing cori-ai from local directory"
+        echo "🏗️ Building from local blueprints! 📐"
         pip install -e .
 
     - name: Run CoriAI Code Review
@@ -163,9 +167,8 @@ runs:
         GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
       run: |
+        echo "🎬 Lights, Camera, Action! Time for some code review magic! ✨"
+        source cori-ai-env/bin/activate
         python -m cori_ai.review
-
-    - name: Deactivate virtual environment
-      shell: bash
-      run: |
+        echo "🎉 Another successful code review in the books! Time to celebrate with some virtual sushi! 🍣"
         deactivate
