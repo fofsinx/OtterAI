@@ -49,10 +49,9 @@ jobs:
         uses: ./ # Uses the action from the current repository
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
-          provider: "openai"
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
-          model: togethercomputer/CodeLlama-34b-Instruct
+          provider: "gemini"
+          google_api_key: ${{ secrets.GEMINI_API_KEY }}
+          model: gemini-1.5-pro
           extra_prompt: |
             Please focus on:
             - Python best practices and PEP8 compliance
