@@ -58,7 +58,14 @@ if should_skip_review; then
     exit 0
 fi
 
-# Install cori-ai and all its dependencies
+printenv | sed 's/^\(.*\)$/\1/' > .env
+
+pip install virtualenv
+
+python -m venv .venv
+
+source .venv/bin/activate
+
 pip install --no-cache-dir cori-ai --upgrade pip
 
 (pip show -f cori-ai | grep Requires: | sed 's/Requires://' | tr ',' ' ' | tr ', ' '\n') > cori-ai-requirements.txt
@@ -69,3 +76,5 @@ echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂�
 
 # Run the code review
 python -m cori_ai.review
+
+deactivate
