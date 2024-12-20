@@ -18,6 +18,79 @@
 - 🎯 Project-specific guidelines
 - 🚫 Skip review functionality with special PR titles or descriptions
 
+## 🎯 Best Practices for AI Reviews
+
+### 1. Detailed PR Descriptions
+For the most effective reviews, include detailed information in your PR description:
+- **Type of Change**: Check all relevant boxes (bug fix, new feature, etc.)
+- **Key Areas to Review**: List specific areas needing attention
+- **Related Issues**: Link to relevant issues/tickets
+- **Testing Done**: Document your testing approach
+- **Additional Notes**: Add context that might help reviewers
+
+> Example:
+> ```
+> **Type of Change**:
+> [x] Bug fix: Fixed memory leak in data processing pipeline
+> [x] New feature: Added support for Mistral AI provider
+> [x] Documentation update: Updated API reference docs
+> [x] Performance improvement: Optimized file indexing (~40% faster)
+> [x] Security enhancement: Added API key validation
+> [x] Code cleanup: Removed deprecated functions
+> [x] Other: Infrastructure updates
+>
+> **Key Areas to Review**:
+> - Data processing pipeline changes in `processor.py`
+> - New Mistral integration in `providers/mistral.py`
+> - Security improvements in `auth.py`
+>
+> **Related Issues**: 
+> - Fixes #123 (memory leak)
+> - Implements #456 (Mistral support)
+> - Addresses #789 (security concerns)
+>
+> **Testing Done**:
+> - Added unit tests for new Mistral provider
+> - Load tested with 1000 concurrent requests
+> - Security penetration testing completed
+> - Memory profiling shows no leaks
+>
+> **Additional Notes**:
+> Infrastructure updates include CI/CD pipeline optimization and dependency upgrades.
+> Please pay special attention to the error handling in the Mistral integration.
+> ```
+
+### 2. Meaningful PR Labels
+Add relevant labels to your PR. The AI uses these to:
+- Understand the scope of changes
+- Focus on relevant aspects
+- Provide more targeted feedback
+
+### 3. Structured Commits
+- Use clear commit messages
+- Follow conventional commit format
+- Link to issues when relevant
+
+### 4. Code Organization
+- Keep changes focused and atomic
+- Group related changes together
+- Include relevant tests
+- Update documentation as needed
+
+### 5. Review Context
+The AI reviewer considers:
+- PR description and labels
+- Project structure and conventions
+- Existing code patterns
+- Test coverage
+- Documentation requirements
+
+By following these practices, you'll receive:
+- More accurate and relevant feedback
+- Better security and performance insights
+- Focused comments on critical areas
+- Suggestions aligned with project standards
+
 ## 🛠️ How to Use
 
 ### 1. Skip Code Review (Optional)
