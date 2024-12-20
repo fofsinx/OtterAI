@@ -166,13 +166,24 @@ runs:
         PR_NUMBER: ${{ inputs.pr_number }}
       run: |
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review"
-
-    - name: Review Code
-      id: review-code
-      uses: 'docker'
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       with:
-        image: 'Dockerfile'
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Review Code
+      id: review-code
+      shell: python
+      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
+      run: |
+        echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️"
+        pip install --no-cache-dir cori-ai --upgrade pip
+        python -m cori_ai.review
+        echo "🎉 Code review complete! 🎉"
+        echo "🐟 Fishy code review results! 🐟"
       env:
         INPUT_PROVIDER: ${{ inputs.provider }}
         INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
@@ -191,3 +202,12 @@ runs:
         PR_AUTHOR: ${{ inputs.pr_author }}
         PR_NUMBER: ${{ inputs.pr_number }}
         GITHUB_REPOSITORY: ${{ inputs.github_repository }}
+
+    - name: Add a label to the PR if review is complete
+      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+      run: |
+        gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review-complete"
