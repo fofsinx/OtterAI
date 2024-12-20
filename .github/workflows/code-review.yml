@@ -33,6 +33,11 @@ jobs:
   code-review:
     needs: tests
     runs-on: ubuntu-latest
+    services:
+      ollama:
+        image: ollama/ollama
+        ports:
+          - 11434:11434
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,11 +50,30 @@ jobs:
           app-id: ${{ secrets.CORI_APP_ID }}
           private-key: ${{ secrets.CORI_APP_PRIVATE_KEY }}
 
+      - name: Pull ollama model via ollama service
+        id: pull-ollama-model
+        run: |
+          curl -X POST http://ollama:11434/api/pull -d '{"name": "codellama:7b"}'
+
+          # wait for 10 seconds
+          sleep 10
+
+          # check if the model is pulled
+          curl -X GET http://ollama:11434/api/models/codellama:7b
+
+          if [ $? -eq 0 ]; then
+            echo "Model pulled successfully"
+          else
+            echo "Model pull failed"
+            exit 1
+          fi
+
       - name: CoriAI ✨ Code Review
         uses: ./ # Uses the action from the current repository
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
-          provider: "ollama-local"
+          provider: "ollama"
+          ollama_base_url: http://host.docker.internal:11434
           model: codellama:7b
           extra_prompt: |
             Please focus on:
