@@ -91,11 +91,12 @@ runs:
     - name: Skip if has skip-review label
       id: check_if_skip_review_label
       shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh pr view ${{ inputs.pr_number }} --json labels | grep -o '"name": *"skip-review"' || true
-        echo "SKIP_REVIEW_LABEL=$?" >> $GITHUB_OUTPUT
+        if [[ ${{ contains(github.event.pull_request.labels.*.name, 'skip-review') }} == true ]]; then
+          echo "SKIP_REVIEW_LABEL=0" >> $GITHUB_OUTPUT
+        else
+          echo "SKIP_REVIEW_LABEL=1" >> $GITHUB_OUTPUT
+        fi
       continue-on-error: true
 
     - name: Check if review is requested
@@ -185,17 +186,12 @@ runs:
         gh label create "cori-ai-review" --description "Cori AI review" --color "f0f0f0" -f
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review"
     
-    - name: Set up Python
+    - name: Review Code with CoriAI ✨
       uses: actions/setup-python@v5
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       with:
         python-version: '3.12'
         cache: 'pip'
-    
-    - name: Review Code
-      id: review-code
-      shell: python
-      if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       run: |
         echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️"
         pip install --no-cache-dir cori-ai --upgrade pip
