@@ -20,7 +20,7 @@ class LLMClient:
     def _init_openai(self) -> BaseChatModel:
         """Initialize OpenAI client."""
         return ChatOpenAI(
-            model_name=os.getenv('INPUT_MODEL', 'gpt-4-turbo-preview'),
+            model_name=os.getenv('INPUT_MODEL', 'gpt-4o-mini'),
             api_key=os.getenv('INPUT_OPENAI_API_KEY'),
             http_async_client=httpx.AsyncClient(timeout=60.0),
             base_url=os.getenv('INPUT_OPENAI_BASE_URL', 'https://api.openai.com/v1'),
