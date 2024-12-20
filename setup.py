@@ -15,7 +15,7 @@ except FileNotFoundError:
 
 setup(
     name="cori-ai",
-    version="0.1.3",
+    version="0.1.4",
     description="An AI-powered code review assistant",
     long_description=long_description,
     long_description_content_type="text/markdown",
