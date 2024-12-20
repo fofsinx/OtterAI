@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+pip install requests==2.32.3
+
+tree /github/workspace
+
 # Run Python script to check if review should be skipped
 python3 << 'EOF'
 import os
