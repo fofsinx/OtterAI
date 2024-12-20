@@ -109,7 +109,7 @@ runs:
         MERGE_PATTERN: \b(?:merged|closed)\b
         PATTERN: \b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b
       run: |
-        if [ ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }} -eq 0 ]; then
+        if [[ ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }} =~ ^0$ ]]; then
           echo "🦦 No review requested, skipping code review"
           echo "code_review_requested=false" >> $GITHUB_OUTPUT
           exit 0
