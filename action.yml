@@ -179,7 +179,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ inputs.pr_number }}
       run: |
-        gh label create "cori-ai-review" --description "Cori AI review" --color "f0f0f0" -f
+        gh label create "cori-ai-review" --description "Cori AI review" --color "9C27B0" -f
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review"
     
     - name: Set up Python
@@ -222,5 +222,5 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ inputs.pr_number }}
       run: |
-        gh label create "cori-ai-review-complete" --description "Cori AI review complete" --color "f0f0f0" -f
+        gh label create "cori-ai-review-complete" --description "Cori AI review complete" --color "2ECC71" -f
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review-complete"
