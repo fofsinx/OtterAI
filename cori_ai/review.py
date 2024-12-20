@@ -461,11 +461,39 @@ def main():
                     path=comment.path,
                     line=comment.line  # Using line number directly
                 )
-                print(f"🎯 Added review comment at line {comment.line} in {comment.path}")
+                print(f"🎯 Added review comment at line {comment.line} in {comment.path} {comment.body}")
         except Exception as e:
             print(f"❌ Error creating comment: {str(e)}")
 
+    
+    # generate a summary of the review
+    summary = generate_review_summary(comments)
+    pr.create_issue_comment(
+        body=(
+            f"Hey @{pr.user.login}! 👋\n\n"
+            f"Just wrapped up reviewing your code! Here's what I found:\n\n"
+            f"{summary}\n\n"
+            "Feel free to ping me if anything's not clear or if you want to chat about any of the suggestions! "
+            "I'm here to help you ship awesome code! 🚀\n\n"
+            "Cheers! 🦦\n"
+            "~ CoriAI ✨"
+        )
+    )
+    
     print("✨ Code review completed!")
+
+def generate_review_summary(comments: List[CodeReviewComment]) -> str:
+    """Generate a summary of the review."""
+    llm_client = LLMClient()
+    llm = llm_client.get_client()
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Generate a summary of the code review done by CoriAI ✨. Use markdown in your summary. Use code blocks in your summary. Use inline code in your summary. Do not deviate from the summary format. Format your summary as a list of items with a - bullet point. Do not use any other formatting."),
+        ("human", "Comments: {comments}"),
+    ])
+
+    summary = llm.invoke(prompt.format(comments=comments))
+    return summary.content
 
 if __name__ == "__main__":
     main() 
