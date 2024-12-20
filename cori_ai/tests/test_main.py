@@ -94,9 +94,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
@@ -115,9 +125,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
@@ -145,9 +165,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
@@ -184,9 +214,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
@@ -209,9 +249,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
@@ -239,9 +289,19 @@ class TestReviewCode(unittest.TestCase):
 
         # Call review_code
         comments, comments_to_delete = review_code(
-            [self.test_file],
-            "Test context",
-            ""
+            diff_files=[self.test_file],
+            project_context="Test context",
+            pr_metadata=dict(
+                title="Test title",
+                description="Test description",
+                labels=["test", "test2"],
+                type_of_change="test",
+                key_areas="test",
+                related_issues="test",
+                testing_done="test",
+                additional_notes="test"
+            ),
+            extra_prompt="Test extra prompt"
         )
 
         # Assertions
