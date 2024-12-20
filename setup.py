@@ -25,6 +25,9 @@ setup(
     packages=['cori_ai'],
     install_requires=requirements,
     python_requires=">=3.12",
+    exclude_package_data={
+        "": ["test_*.py"],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

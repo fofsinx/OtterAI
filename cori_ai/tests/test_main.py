@@ -8,7 +8,6 @@ from cori_ai.review import (
     CodeReviewResponse,
     validate_comment_position
 )
-from langchain.output_parsers import PydanticOutputParser
 
 class TestCleanJsonString(unittest.TestCase):
     def test_clean_basic_json(self):
@@ -50,7 +49,7 @@ class TestValidateCommentPosition(unittest.TestCase):
 
 class TestReviewCode(unittest.TestCase):
     def setUp(self):
-        self.patcher1 = patch('cori_ai.main.LLMClient')
+        self.patcher1 = patch('cori_ai.review.LLMClient')
         self.patcher2 = patch('langchain.output_parsers.PydanticOutputParser')
         
         self.mock_llm_client = self.patcher1.start()
