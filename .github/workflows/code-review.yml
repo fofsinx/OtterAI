@@ -67,26 +67,24 @@ jobs:
             exit 1
           fi
       
-      - uses: LuisBoto/ngrok-tunnel-action@v0.1.7.2
-        with:
-          timeout: 10m
-          port: 11434
-          ngrok_authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
-          tunnel_type: http
-          save_url_to_filename: tunnelURL.md
-
-      - name: Print tunnel URL
+      - name: Setup ngrok
         run: |
-          TUNNEL_URL=$(cat tunnelURL.md)
-          echo "OLLAMA_BASE_URL=$TUNNEL_URL" >> $GITHUB_ENV
-          echo "Setting OLLAMA_BASE_URL to: $TUNNEL_URL"
+          apt-get update && apt-get install -y curl
+          curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+            && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+            | sudo tee /etc/apt/sources.list.d/ngrok.list \
+            && sudo apt update \
+            && sudo apt install ngrok
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          ngrok http --url=${{ secrets.OLLAMA_BASE_URL }} 11434
 
       - name: CoriAI ✨ Code Review
         uses: ./ # Uses the action from the current repository
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
           provider: "ollama"
-          ollama_base_url: ${{ env.OLLAMA_BASE_URL }}
+          ollama_base_url: https://${{ secrets.OLLAMA_BASE_URL }}
           model: codellama:7b
           extra_prompt: |
             Please focus on:
