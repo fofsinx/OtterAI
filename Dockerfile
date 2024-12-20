@@ -13,5 +13,7 @@ WORKDIR /github/workspace
 # Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+RUN echo "Working directory: $GITHUB_WORKSPACE"
+RUN ls -la /github/workspace
 
 ENTRYPOINT ["/entrypoint.sh"]
