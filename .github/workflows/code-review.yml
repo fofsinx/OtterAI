@@ -66,13 +66,23 @@ jobs:
             echo "Model pull failed"
             exit 1
           fi
-
+      
+      - name: Setup cloudflared
+        uses: AnimMouse/setup-cloudflared@v2
+          
+      - name: Setup cloudflared tunnel
+        uses: AnimMouse/setup-cloudflared/tunnel@v2
+        with:
+            cloudflare_tunnel_credential: ${{ secrets.CLOUDFLARE_TUNNEL_CREDENTIAL }}
+            cloudflare_tunnel_configuration: ${{ vars.CLOUDFLARE_TUNNEL_CONFIGURATION }}
+            cloudflare_tunnel_id: ${{ vars.CLOUDFLARE_TUNNEL_ID }}
+            
       - name: CoriAI ✨ Code Review
         uses: ./ # Uses the action from the current repository
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
           provider: "ollama"
-          ollama_base_url: http://host.docker.internal:11434
+          ollama_base_url: ${{ vars.OLLAMA_BASE_URL }}
           model: codellama:7b
           extra_prompt: |
             Please focus on:
@@ -85,3 +95,7 @@ jobs:
             - Use markdown in your comments.
             - Use code blocks in your comments.
             - Use inline code in your comments.
+
+      - name: Shutdown and view logs of cloudflared
+        if: '! cancelled()'
+        uses: AnimMouse/setup-cloudflared/shutdown@v2
