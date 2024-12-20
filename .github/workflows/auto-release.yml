@@ -75,6 +75,17 @@ jobs:
           NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
 
+      - name: Generate Release notes
+        id: generate-release-notes
+        run: |
+          # get all the commits since the last release
+          git fetch --tags
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          git log --oneline --no-merges --pretty=format:"%s" ${LAST_TAG}..HEAD > release_notes.txt
+          curl -X POST -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" -H "Content-Type: application/json" -d '{"model": "gpt-4o-mini", "messages": [{"role": "system", "content": "You are a helpful assistant that generates release notes for a software project. The user will provide a list of commits since the last release, and you will generate a summary of the changes in a way that is easy to understand and use for the release notes."}, {"role": "user", "content": "Here are the commits since the last release: ${} Repo: ${{ github.repository }} Release name: ${{ env.DOCKERLIKE_RELEASE_NAME }} Version: ${{ env.NEW_VERSION }}"}]}, Use emojis to make it more fun and engaging."}' ${{ secrets.OPENAI_BASE_URL }} | jq -r '.choices[0].message.content' > release_notes.txt
+
+          echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_OUTPUT
+
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -83,6 +94,5 @@ jobs:
         run: |
           gh release create ${NEW_VERSION} \
             --title "${DOCKERLIKE_RELEASE_NAME}" \
-            --notes "Let's ship this Cori AI release!
-             🚀 Changelogs here: https://cori.theboring.name/changelogs" \
+            --notes "${{ steps.generate-release-notes.outputs.RELEASE_NOTES }}" \
             --target sudo
