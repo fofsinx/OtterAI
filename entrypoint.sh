@@ -74,12 +74,6 @@ EOF
 # Install cori-ai and all its dependencies
 pip install --no-cache-dir cori-ai --upgrade pip
 
-# Install and run ollama if provider is ollama
-if [ "$INPUT_PROVIDER" = "ollama-local" ]; then
-    curl -fsSL https://ollama.com/install.sh | sh && \
-    ollama serve & ollama run "$INPUT_MODEL"
-fi
-
 echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️"
 echo "Working directory: $GITHUB_WORKSPACE"
 
