@@ -48,7 +48,7 @@ inputs:
   model:
     description: 'Model to use (provider-specific, e.g., gpt-4-turbo-preview for OpenAI, gemini-pro for Google)'
     required: false
-    default: ''
+    default: 'gpt-4o-mini'
 
 runs:
   using: 'composite'
@@ -136,10 +136,6 @@ runs:
       run: |
         echo "🐍 Time to charm some pythons and install their friends! 🎭"
         python -m pip install --upgrade pip
-        echo "🌱 Creating a cozy virtual environment for our code to live in! 🏠"
-        pip install virtualenv
-        python -m venv cori-ai-env
-        source cori-ai-env/bin/activate
         echo "🚀 Installing cori-ai - because every otter needs their tools! 🔧"
         pip install cori-ai
         echo "🏗️ Building from local blueprints! 📐"
@@ -168,7 +164,5 @@ runs:
         GITHUB_WORKSPACE: ${{ github.workspace }}
       run: |
         echo "🎬 Lights, Camera, Action! Time for some code review magic! ✨"
-        source cori-ai-env/bin/activate
         python -m cori_ai.review
         echo "🎉 Another successful code review in the books! Time to celebrate with some virtual sushi! 🍣"
-        deactivate
