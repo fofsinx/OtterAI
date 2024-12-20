@@ -107,13 +107,9 @@ runs:
         PR_DESCRIPTION: ${{ inputs.pr_description }}
         PR_STATE: ${{ inputs.pr_state }}
         MERGE_PATTERN: \b(?:merged|closed)\b
+        SKIP_REVIEW_LABEL: ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }}
         PATTERN: \b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b
       run: |
-        if [[ ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }} =~ ^0$ ]]; then
-          echo "🦦 No review requested, skipping code review"
-          echo "code_review_requested=false" >> $GITHUB_OUTPUT
-          exit 0
-        fi
         import os
         import re
 
@@ -123,7 +119,7 @@ runs:
         merge_pattern = os.environ['MERGE_PATTERN']
         pr_state = os.environ['PR_STATE']
 
-        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE):
+        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE) or os.environ.get('SKIP_REVIEW_LABEL', '1') == '0':
             print("🦦 No review requested, skipping code review")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=false\n")
@@ -186,8 +182,13 @@ runs:
         gh label create "cori-ai-review" --description "Cori AI review" --color "f0f0f0" -f
         gh pr edit ${{ env.PR_NUMBER }} --add-label "cori-ai-review"
     
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+          python-version: "3.12"   
+
     - name: Review Code with CoriAI ✨
-      shell: python
+      shell: bash
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
       run: |
         echo "🔍 Detective Otter on the case! Time to review some code! 🕵️‍♂️"
