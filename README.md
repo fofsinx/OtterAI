@@ -2,12 +2,11 @@
 
 🤖 A GitHub Action that provides AI-powered code reviews for your pull requests using multiple LLM providers. Created by a very smart human with multiple degrees in Computer Science! 🎓
 
-Example: https://github.com/theboringhumane/cori-ai/pull/12
+Example: [CoriAI PR](https://github.com/theboringhumane/cori-ai/pull/13)
 
-[Cori Repo]https://github.com/theboringhumane/cori-ai
+[Cori Repo](https://github.com/theboringhumane/cori-ai)
 
 ![✨ CoriAI](/static/otterai.png)
-![✨ CoriAI](/static/image.png)
 
 ## ✨ Features
 
@@ -20,6 +19,8 @@ Example: https://github.com/theboringhumane/cori-ai/pull/12
 - 🎯 Project-specific guidelines
 - 🚫 Skip review functionality with special PR titles or descriptions
 
+![✨ CoriAI](/static/pr-description.png)
+
 ## 🎯 Best Practices for AI Reviews
 
 ### 1. Detailed PR Descriptions
@@ -29,6 +30,7 @@ For the most effective reviews, include detailed information in your PR descript
 - **Related Issues**: Link to relevant issues/tickets
 - **Testing Done**: Document your testing approach
 - **Additional Notes**: Add context that might help reviewers
+
 
 > Example:
 > ```

@@ -111,7 +111,7 @@ jobs:
         run: |
           # Extract version from git tag
           # get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          LATEST_TAG=$(git describe --tags --abbrev=0)
           # Update versions in files
           sed -i "s/version = \".*\"/version = \"${LATEST_TAG}\"/" pyproject.toml
 
