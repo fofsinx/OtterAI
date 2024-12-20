@@ -402,7 +402,7 @@ def main():
 
     # Get PR information from GitHub environment
     repo = os.getenv('GITHUB_REPOSITORY')
-    pr_number = int(os.getenv('GITHUB_EVENT_NUMBER'))
+    pr_number = int(os.getenv('PR_NUMBER'))
     extra_prompt = os.getenv('INPUT_EXTRA_PROMPT', '')
     workspace = os.getenv('GITHUB_WORKSPACE', '.')
     
@@ -432,7 +432,6 @@ def main():
         'additional_notes': extract_additional_notes(pr.body)
     }
 
-    
     # Review code with project context
     comments, comments_to_delete = review_code(diff_files, project_context, pr_metadata, extra_prompt)
     
@@ -488,7 +487,7 @@ def generate_review_summary(comments: List[CodeReviewComment]) -> str:
     llm = llm_client.get_client()
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Generate a summary of the code review done by CoriAI ✨. Use markdown in your summary. Use code blocks in your summary. Use inline code in your summary. Do not deviate from the summary format. Format your summary as a list of items with a - bullet point. Do not use any other formatting."),
+        ("system", "Generate a summary of the code review done by CoriAI ✨. Use markdown in your summary. Use code blocks in your summary. Use inline code in your summary. Do not deviate from the summary format. Format your summary as a list of items with a - bullet point. Do not use any other formatting. This will be for the PR author to read."),
         ("human", "Comments: {comments}"),
     ])
 
