@@ -58,6 +58,30 @@ inputs:
     description: 'Model to use (provider-specific, e.g., gpt-4-turbo-preview for OpenAI, gemini-pro for Google)'
     required: false
     default: 'gpt-4o-mini'
+  pr_title:
+    description: 'Title of the pull request'
+    required: false
+    default: ${{ github.event.pull_request.title }}
+  pr_description:
+    description: 'Description of the pull request'
+    required: false
+    default: ${{ github.event.pull_request.body }}
+  pr_state:
+    description: 'State of the pull request'
+    required: false
+    default: ${{ github.event.pull_request.state }}
+  pr_author:
+    description: 'Author of the pull request'
+    required: false
+    default: ${{ github.event.pull_request.user.login }}
+  pr_number:
+    description: 'Number of the pull request'
+    required: false
+    default: ${{ github.event.number }}
+  github_repository:
+    description: 'Repository of the pull request'
+    required: false
+    default: ${{ github.repository }}
 
 runs:
   using: 'docker'
@@ -74,9 +98,9 @@ runs:
     INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
     INPUT_MODEL: ${{ inputs.model }}
     INPUT_EXTRA_PROMPT: ${{ inputs.extra_prompt }}
-    PR_TITLE: ${{ github.event.pull_request.title }}
-    PR_DESCRIPTION: ${{ github.event.pull_request.body }}
-    PR_STATE: ${{ github.event.pull_request.state }}
-    PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-    PR_NUMBER: ${{ github.event.number }}
-    GITHUB_REPOSITORY: ${{ github.repository }}
+    PR_TITLE: ${{ inputs.pr_title }}
+    PR_DESCRIPTION: ${{ inputs.pr_description }}
+    PR_STATE: ${{ inputs.pr_state }}
+    PR_AUTHOR: ${{ inputs.pr_author }}
+    PR_NUMBER: ${{ inputs.pr_number }}
+    GITHUB_REPOSITORY: ${{ inputs.github_repository }}
