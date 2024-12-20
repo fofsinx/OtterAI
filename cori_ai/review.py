@@ -242,6 +242,7 @@ Key Areas to Review: {pr_metadata.get('key_areas', 'N/A')}
 Related Issues: {pr_metadata.get('related_issues', 'N/A')}
 Testing Done: {pr_metadata.get('testing_done', 'N/A')}
 Additional Notes: {pr_metadata.get('additional_notes', 'N/A')}
+Commits: {pr_metadata.get('commits', 'N/A')}
 """
 
     prompt = ChatPromptTemplate.from_messages([
@@ -429,7 +430,8 @@ def main():
         'key_areas': extract_key_areas(pr.body),
         'related_issues': extract_related_issues(pr.body),
         'testing_done': extract_testing_done(pr.body),
-        'additional_notes': extract_additional_notes(pr.body)
+        'additional_notes': extract_additional_notes(pr.body),
+        'commits': [{'sha': commit.sha, 'title': commit.commit.message.split('\n')[0], 'body': commit.commit.message.split('\n')[1:]} for commit in pr.get_commits()],
     }
 
     # Review code with project context
