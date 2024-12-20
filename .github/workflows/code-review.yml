@@ -33,11 +33,6 @@ jobs:
   code-review:
     needs: tests
     runs-on: ubuntu-latest
-    services:
-      ollama:
-        image: ollama/ollama
-        ports:
-          - 11434:11434
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,42 +45,14 @@ jobs:
           app-id: ${{ secrets.CORI_APP_ID }}
           private-key: ${{ secrets.CORI_APP_PRIVATE_KEY }}
 
-      - name: Pull ollama model via ollama service
-        id: pull-ollama-model
-        run: |
-          # Pull model and check for errors in one step
-          if ! curl -s -X POST http://localhost:11434/api/pull -d '{"name": "codellama:7b"}' | grep -q "error"; then
-            # Verify model exists in tags
-            if curl -s -X GET http://localhost:11434/api/tags | grep -q "codellama:7b"; then
-              echo "Model pulled successfully"
-            else
-              echo "Model verification failed"
-              exit 1
-            fi
-          else
-            echo "Model pull failed"
-            exit 1
-          fi
-      
-      - name: Setup ngrok
-        run: |
-          apt-get update && apt-get install -y curl
-          curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-            && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-            | sudo tee /etc/apt/sources.list.d/ngrok.list \
-            && sudo apt update \
-            && sudo apt install ngrok
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
-          ngrok http --url=${{ secrets.OLLAMA_BASE_URL }} 11434 &
-
       - name: CoriAI ✨ Code Review
         uses: ./ # Uses the action from the current repository
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
-          provider: "ollama"
-          ollama_base_url: https://${{ secrets.OLLAMA_BASE_URL }}
-          model: codellama:7b
+          provider: "openai"
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
+          model: togethercomputer/CodeLlama-34b-Instruct
           extra_prompt: |
             Please focus on:
             - Python best practices and PEP8 compliance
