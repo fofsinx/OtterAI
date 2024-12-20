@@ -225,12 +225,24 @@ def clean_json_string(json_str: str) -> str:
         # Return a valid empty response as fallback
         return '{"comments": []}'
 
-def review_code(diff_files: List[Dict[str, Any]], project_context: str, extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
+def review_code(diff_files: List[Dict[str, Any]], project_context: str, pr_metadata: Dict[str, Any], extra_prompt: str = "") -> Tuple[List[CodeReviewComment], List[int]]:
     """Review code changes using LangChain and OpenAI."""
     llm_client = LLMClient()
     llm = llm_client.get_client()
     
     parser = PydanticOutputParser(pydantic_object=CodeReviewResponse)
+
+    # Format PR metadata for context
+    pr_context = f"""
+PR Title: {pr_metadata.get('title', 'N/A')}
+PR Description: {pr_metadata.get('description', 'N/A')}
+Labels: {', '.join(pr_metadata.get('labels', []))}
+Type of Change: {pr_metadata.get('type_of_change', 'N/A')}
+Key Areas to Review: {pr_metadata.get('key_areas', 'N/A')}
+Related Issues: {pr_metadata.get('related_issues', 'N/A')}
+Testing Done: {pr_metadata.get('testing_done', 'N/A')}
+Additional Notes: {pr_metadata.get('additional_notes', 'N/A')}
+"""
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are Dr. OtterAI, an expert code reviewer. Review code changes and provide specific, actionable feedback.
@@ -267,6 +279,9 @@ These are the ONLY valid lines you can comment on:
 Existing comments:
 {existing_comments}
 
+Below is the PR metadata that you should use to review the code and analyze the changes:
+{pr_context}
+
 Diff to review:
 {code_diff}""")
     ])
@@ -298,7 +313,8 @@ Diff to review:
                 valid_lines=valid_lines,
                 context=project_context,
                 extra_instructions=extra_prompt,
-                format_instructions=parser.get_format_instructions()
+                format_instructions=parser.get_format_instructions(),
+                pr_context=pr_context
             )
 
             # Get raw response from LLM
@@ -340,6 +356,44 @@ Diff to review:
     
     return comments, list(comments_to_delete)
 
+def extract_section_content(body: str, section_name: str) -> str:
+    """Extract content from a specific section in PR description."""
+    if not body:
+        return "N/A"
+        
+    pattern = rf"#+\s*{section_name}.*?\n(.*?)(?=\n#|\Z)"
+    match = re.search(pattern, body, re.DOTALL)
+    if match:
+        content = match.group(1).strip()
+        return content if content else "N/A"
+    return "N/A"
+
+def extract_type_of_change(body: str) -> str:
+    """Extract type of change from PR description."""
+    if not body:
+        return "N/A"
+        
+    pattern = r"\[x\]\s*(.*?)\n"
+    matches = re.finditer(pattern, body)
+    changes = [match.group(1).strip() for match in matches]
+    return ", ".join(changes) if changes else "N/A"
+
+def extract_key_areas(body: str) -> str:
+    """Extract key areas to review."""
+    return extract_section_content(body, "Key Areas to Review")
+
+def extract_related_issues(body: str) -> str:
+    """Extract related issues."""
+    return extract_section_content(body, "Related Issues")
+
+def extract_testing_done(body: str) -> str:
+    """Extract testing information."""
+    return extract_section_content(body, "Testing Done")
+
+def extract_additional_notes(body: str) -> str:
+    """Extract additional notes."""
+    return extract_section_content(body, "Additional Notes")
+
 def main():
     """Main entry point for the GitHub Action."""
     github_token = os.getenv('INPUT_GITHUB_TOKEN')
@@ -366,8 +420,21 @@ def main():
     # Get PR changes
     diff_files = get_pr_diff(repo, pr)
     
+    # Get PR metadata
+    pr_metadata = {
+        'title': pr.title,
+        'description': pr.body,
+        'labels': [label.name for label in pr.labels],
+        'type_of_change': extract_type_of_change(pr.body),
+        'key_areas': extract_key_areas(pr.body),
+        'related_issues': extract_related_issues(pr.body),
+        'testing_done': extract_testing_done(pr.body),
+        'additional_notes': extract_additional_notes(pr.body)
+    }
+
+    
     # Review code with project context
-    comments, comments_to_delete = review_code(diff_files, project_context, extra_prompt)
+    comments, comments_to_delete = review_code(diff_files, project_context, pr_metadata, extra_prompt)
     
 
     # Delete comments first
