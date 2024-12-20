@@ -3,9 +3,7 @@ set -e
 
 pip install requests==2.32.3
 
-alias tree='find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"'
-
-tree
+ls -la /github/workspace
 
 # Run Python script to check if review should be skipped
 python3 << 'EOF'
