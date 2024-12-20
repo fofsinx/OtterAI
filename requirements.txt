@@ -294,7 +294,7 @@ orjson==3.10.12
     # via
     #   -r requirements.txt
     #   langsmith
-packaging==23.2
+packaging
     # via
     #   -r requirements.txt
     #   huggingface-hub
