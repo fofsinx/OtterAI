@@ -93,7 +93,7 @@ jobs:
           COMMITS: ${{ env.COMMITS }}
         run: |
           RELEASE_NOTES=$(curl -X POST \
-            -H "Authorization: Bearer ${{ env.OPENAI_API_KEY }}" \
+            -H "Authorization: Bearer ${OPENAI_API_KEY}" \
             -H "Content-Type: application/json" \
             -d "{
               \"model\": \"gpt-4o-mini\",
@@ -104,11 +104,11 @@ jobs:
                 },
                 {
                   \"role\": \"user\",
-                  \"content\": \"Here are the commits since the last release: ${{ env.COMMITS }} ;Repo: ${{ github.repository }}; Release name: ${{ env.DOCKERLIKE_RELEASE_NAME }}; Version: ${{ env.NEW_VERSION }}\"
+                  \"content\": \"Here are the commits since the last release: ${COMMITS} ;Repo: ${GITHUB_REPOSITORY}; Release name: ${DOCKERLIKE_RELEASE_NAME}; Version: ${NEW_VERSION}\"
                 }
               ]
             }" \
-            "${{ secrets.OPENAI_BASE_URL }}/chat/completions" | jq '.choices[0].message.content')
+            "${OPENAI_BASE_URL}/chat/completions" | jq '.choices[0].message.content')
 
           # output format {choices: [{message: {content: "..."}}]}
           echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_OUTPUT
