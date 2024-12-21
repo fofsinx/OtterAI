@@ -17,7 +17,20 @@ def should_ignore_file(file_path: str) -> bool:
         '*.xcodeproj/*', '*.xcworkspace/*', 'Pods/*', '*.xcuserstate',
         # Flutter specific
         '.dart_tool/*', '.flutter-plugins', '.flutter-plugins-dependencies',
-        'build/*', '.pub-cache/*', '.pub/*', 'ios/Pods/*', 'android/.gradle/*'
+        # Go specific
+        '*go.mod', 'go.sum',
+        # Android specific
+        'android/*', 'ios/*', 'ios/Pods/*', 'android/.gradle/*',
+        # Rust specific
+        'Cargo.lock', 'Cargo.toml', '*.rs', '*.toml', '*.lock', '*.lock',
+        # Kotlin specific
+        '*.kt', '*.kts', '*.gradle', '*.gradlew', '*.gradlew.bat', '*.gradle.kts',
+        # Java specific 
+        '*.java', '*.class', '*.jar', '*.war', '*.ear', '*.gradle', '*.gradlew', '*.gradlew.bat', '*.gradle.kts',
+        # C# specific
+        '*.cs', '*.dll', '*.exe', '*.pdb', '*.csproj', '*.sln', '*.config', '*.props', '*.targets', '*.nuspec', '*.nupkg', '*.csproj.user', '*.csproj.vspscc', '*.csproj.vssscc', '*.csproj.webinfo', '*.csproj.user', '*.csproj.vspscc', '*.csproj.vssscc', '*.csproj.webinfo',
+        # PHP specific
+        '*.php', '*.php3', '*.php4', '*.php5', '*.php7', '*.phps', '*.phpt', '*.phtml', '*.inc', '*.module', '*.profile', '*.engine', '*.engine.php', '*.engine.inc', '*.engine.module', '*.engine.profile', '*.engine.inc', '*.engine.module', '*.engine.profile',
     ]
     return any(fnmatch.fnmatch(file_path, pattern) for pattern in ignore_patterns)
 
@@ -61,14 +74,6 @@ def index_codebase(root_dir: str) -> Dict[str, List[str]]:
         'test': [],
         'other': []
     }
-
-    default_ignore_patterns = [
-        '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
-        '*.min.js', '*.min.css', '*.map', '*.lock', '*.sum',
-        'dist/*', 'build/*', '.env*', '*.log',
-        '*venv/*', '*.venv/*', '*.venv', 'venv/*', 'venv', '*.venv',
-        '*.pyc', '__pycache__/*', '.git/*', '.github/*', 'node_modules/*',
-    ]
     
     for root, _, files in os.walk(root_dir):
         for file in files:
