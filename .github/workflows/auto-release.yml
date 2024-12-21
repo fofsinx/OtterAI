@@ -77,23 +77,26 @@ jobs:
 
       - name: Get commits
         id: get_commits
+        shell: sh
         run: |
           git fetch --tags
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           COMMITS=$(git log --oneline --no-merges --pretty=format:"%s" ${LAST_TAG}..HEAD)
-          echo "COMMITS=${COMMITS}" >> $GITHUB_ENV
+          COMMITS=$(echo "$COMMITS" | tr '\n' ';')
+          echo "ALL_COMMITS=$COMMITS" >> $GITHUB_ENV
 
       - name: Generate Release notes
         id: generate-release-notes
+        shell: sh
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           DOCKERLIKE_RELEASE_NAME: ${{ env.DOCKERLIKE_RELEASE_NAME }}
           NEW_VERSION: ${{ env.NEW_VERSION }}
-          COMMITS: ${{ env.COMMITS }}
+          COMMITS: ${{ env.ALL_COMMITS }}
         run: |
           RELEASE_NOTES=$(curl -X POST \
-            -H "Authorization: Bearer ${OPENAI_API_KEY}" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"model\": \"gpt-4o-mini\",
@@ -104,22 +107,28 @@ jobs:
                 },
                 {
                   \"role\": \"user\",
-                  \"content\": \"Here are the commits since the last release: ${COMMITS} ;Repo: ${GITHUB_REPOSITORY}; Release name: ${DOCKERLIKE_RELEASE_NAME}; Version: ${NEW_VERSION}\"
+                  \"content\": \"Here are the commits since the last release: $COMMITS; Repo: $GITHUB_REPOSITORY; Release name: $DOCKERLIKE_RELEASE_NAME; Version: $NEW_VERSION\"
                 }
               ]
             }" \
-            "${OPENAI_BASE_URL}/chat/completions" | jq '.choices[0].message.content')
-
-          # output format {choices: [{message: {content: "..."}}]}
-          echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_OUTPUT
+            "$OPENAI_BASE_URL/chat/completions" | jq '.choices[0].message.content')
+          if [ -z "$RELEASE_NOTES" ]; then
+            echo "RELEASE_NOTES=No release notes generated" >> $GITHUB_OUTPUT
+          else
+            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '"') # remove quotes
+            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '\n') # remove newlines
+            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '\r') # remove carriage returns
+            echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           NEW_VERSION: ${{ env.NEW_VERSION }}
           DOCKERLIKE_RELEASE_NAME: ${{ env.DOCKERLIKE_RELEASE_NAME }}
+          RELEASE_NOTES: ${{ steps.generate-release-notes.outputs.RELEASE_NOTES }}
         run: |
           gh release create ${NEW_VERSION} \
             --title "${DOCKERLIKE_RELEASE_NAME}" \
-            --notes "${{ steps.generate-release-notes.outputs.RELEASE_NOTES }}" \
+            --notes "${RELEASE_NOTES}" \
             --target sudo
