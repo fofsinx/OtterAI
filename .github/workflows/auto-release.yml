@@ -83,7 +83,23 @@ jobs:
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           COMMITS=$(git log --oneline --no-merges --pretty=format:"%s" ${LAST_TAG}..HEAD)
           echo "COMMITS=${COMMITS}" >> $GITHUB_ENV
-          RELEASE_NOTES=$(curl -X POST -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" -H "Content-Type: application/json" -d '{"model": "gpt-4o-mini", "messages": [{"role": "system", "content": "You are a helpful assistant that generates release notes for a software project. The user will provide a list of commits since the last release, and you will generate a summary of the changes in a way that is easy to understand and use for the release notes."}, {"role": "user", "content": "Here are the commits since the last release: ${{ env.COMMITS }} ;Repo: ${{ github.repository }}; Release name: ${{ env.DOCKERLIKE_RELEASE_NAME }}; Version: ${{ env.NEW_VERSION }}"}]}, Use emojis to make it more fun and engaging."}' ${{ secrets.OPENAI_BASE_URL }} | jq '.choices[0].message.content')
+          RELEASE_NOTES=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "gpt-4o-mini",
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "You are a helpful assistant that generates release notes for a software project. The user will provide a list of commits since the last release, and you will generate a summary of the changes in a way that is easy to understand and use for the release notes."
+                },
+                {
+                  "role": "user",
+                  "content": "Here are the commits since the last release: ${{ env.COMMITS }} ;Repo: ${{ github.repository }}; Release name: ${{ env.DOCKERLIKE_RELEASE_NAME }}; Version: ${{ env.NEW_VERSION }}"
+                }
+              ]
+            }' \
+            "${{ secrets.OPENAI_BASE_URL }}/chat/completions" | jq '.choices[0].message.content')
 
           # output format {choices: [{message: {content: "..."}}]}
           echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_OUTPUT
