@@ -103,7 +103,7 @@ jobs:
               \"messages\": [
                 {
                   \"role\": \"system\",
-                  \"content\": \"You are a helpful assistant that generates release notes for a software project. The user will provide a list of commits since the last release, and you will generate a summary of the changes in a way that is easy to understand and use for the release notes.\"
+                  \"content\": \"You are a helpful assistant that generates release notes for a software project. The user will provide a list of commits since the last release, and you will generate a summary of the changes in a way that is easy to understand and use for the release notes. Use markdown formatting. USE EMOJIS TO MAKE IT MORE READABLE and be human readable.\"
                 },
                 {
                   \"role\": \"user\",
@@ -116,7 +116,7 @@ jobs:
             echo "RELEASE_NOTES=No release notes generated" >> $GITHUB_OUTPUT
           else
             RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '"') # remove quotes
-            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '\n') # remove newlines
+            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/\n/ <br>/g') # replace newlines with <br>
             RELEASE_NOTES=$(echo "$RELEASE_NOTES" | tr -d '\r') # remove carriage returns
             echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
           fi
