@@ -1,5 +1,5 @@
-"""Core package for OtterAI."""
-from otterai.core.models import (
+"""Core package for cori_ai."""
+from cori_ai.core.models import (
     BaseOtterModel,
     CodeReviewComment,
     CodeReviewResponse,
@@ -7,8 +7,8 @@ from otterai.core.models import (
     FileDiff,
     PullRequestInfo,
 )
-from otterai.core.config import settings, EMOJI_MAP
-from otterai.core.exceptions import (
+from cori_ai.core.config import settings, EMOJI_MAP
+from cori_ai.core.exceptions import (
     OtterAIError,
     ConfigurationError,
     GitHubError,

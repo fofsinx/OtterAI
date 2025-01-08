@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch
 import pytest
 
-from otterai.core.config import OtterAISettings, settings, EMOJI_MAP
+from cori_ai.core.config import OtterAISettings, settings, EMOJI_MAP
 
 
 @pytest.fixture

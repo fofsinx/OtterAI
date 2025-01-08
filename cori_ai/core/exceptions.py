@@ -1,8 +1,8 @@
-"""Custom exceptions for OtterAI."""
+"""Custom exceptions for cori_ai."""
 
 
 class OtterAIError(Exception):
-    """Base exception for OtterAI."""
+    """Base exception for cori_ai."""
     pass
 
 

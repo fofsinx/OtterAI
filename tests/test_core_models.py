@@ -3,7 +3,7 @@ import pytest
 from pydantic import ValidationError
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from otterai.core.models import (
+from cori_ai.core.models import (
     BaseOtterModel,
     CodeReviewComment,
     CodeReviewResponse,

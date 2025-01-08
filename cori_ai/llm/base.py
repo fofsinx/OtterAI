@@ -8,8 +8,8 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-from otterai.core.exceptions import LLMError, ConfigurationError
-from otterai.core.config import settings
+from cori_ai.core.exceptions import LLMError, ConfigurationError
+from cori_ai.core.config import settings
 
 
 class BaseLLMProvider(ABC):

@@ -1,5 +1,5 @@
-"""OtterAI - AI-powered code review and fix generation."""
-from otterai.core import (
+"""CoriAI - AI-powered code review and fix generation."""
+from cori_ai.core import (
     settings,
     EMOJI_MAP,
     CodeReviewComment,
@@ -8,9 +8,9 @@ from otterai.core import (
     FileDiff,
     PullRequestInfo,
 )
-from otterai.github import GitHubClient
-from otterai.review import CodeReviewer
-from otterai.fix import FixGenerator
+from cori_ai.github import GitHubClient
+from cori_ai.review import CodeReviewer
+from cori_ai.fix import FixGenerator
 
 __version__ = "0.1.0"
 

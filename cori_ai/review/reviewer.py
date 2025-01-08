@@ -1,13 +1,13 @@
-"""Code review module for OtterAI."""
+"""Code review module for cori_ai."""
 import re
 from typing import List, Dict, Any, Optional, AsyncGenerator
 import json
 
-from otterai.core.exceptions import ReviewError
-from otterai.core.config import settings, EMOJI_MAP
-from otterai.core.models import CodeReviewComment, CodeReviewResponse, FileDiff
-from otterai.llm import get_provider
-from otterai.github import GitHubClient
+from cori_ai.core.exceptions import ReviewError
+from cori_ai.core.config import settings, EMOJI_MAP
+from cori_ai.core.models import CodeReviewComment, CodeReviewResponse, FileDiff
+from cori_ai.llm import get_provider
+from cori_ai.github import GitHubClient
 
 
 class CodeReviewer:

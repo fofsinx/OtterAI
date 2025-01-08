@@ -1,16 +1,16 @@
 """LLM provider package."""
 from typing import Optional
 
-from otterai.core.exceptions import ConfigurationError
-from otterai.core.config import settings
+from cori_ai.core.exceptions import ConfigurationError
+from cori_ai.core.config import settings
 
-from otterai.llm.base import BaseLLMProvider
-from otterai.llm.openai_provider import OpenAIProvider
-from otterai.llm.gemini_provider import GeminiProvider
-from otterai.llm.anthropic_provider import AnthropicProvider
-from otterai.llm.groq_provider import GroqProvider
-from otterai.llm.mistral_provider import MistralProvider
-from otterai.llm.ollama_provider import OllamaProvider
+from cori_ai.llm.base import BaseLLMProvider
+from cori_ai.llm.openai_provider import OpenAIProvider
+from cori_ai.llm.gemini_provider import GeminiProvider
+from cori_ai.llm.anthropic_provider import AnthropicProvider
+from cori_ai.llm.groq_provider import GroqProvider
+from cori_ai.llm.mistral_provider import MistralProvider
+from cori_ai.llm.ollama_provider import OllamaProvider
 
 __all__ = [
     'BaseLLMProvider',

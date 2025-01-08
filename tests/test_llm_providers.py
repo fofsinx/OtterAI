@@ -6,9 +6,9 @@ from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk
 from langchain_core.output_parsers import JsonOutputParser
 
-from otterai.core.exceptions import LLMError, ConfigurationError
-from otterai.core.config import settings
-from otterai.llm import (
+from cori_ai.core.exceptions import LLMError, ConfigurationError
+from cori_ai.core.config import settings
+from cori_ai.llm import (
     get_provider,
     OpenAIProvider,
     GeminiProvider,
@@ -82,7 +82,7 @@ async def test_get_provider():
         mocks[provider_name] = mock_class
         
     with patch.multiple(
-        'otterai.llm',
+        'cori_ai.llm',
         OpenAIProvider=mocks['openai'],
         GeminiProvider=mocks['gemini'],
         AnthropicProvider=mocks['anthropic'],
@@ -109,7 +109,7 @@ async def test_get_provider():
 @pytest.mark.asyncio
 async def test_base_provider_methods():
     """Test base provider methods."""
-    with patch('otterai.llm.OpenAIProvider') as MockProvider:
+    with patch('cori_ai.llm.OpenAIProvider') as MockProvider:
         # Setup the mock provider instance
         provider = AsyncMock()
         provider._llm = AsyncMock()
@@ -216,7 +216,7 @@ async def test_provider_error_handling():
     ]
 
     for provider_class, provider_name, chat_class in providers:
-        with patch(f"otterai.llm.{provider_name}_provider.{chat_class}") as mock_chat:
+        with patch(f"cori_ai.llm.{provider_name}_provider.{chat_class}") as mock_chat:
             print(f"Mocking {provider_name} provider with {chat_class}")
             mock_chat.side_effect = Exception("API error")
             with pytest.raises(ConfigurationError) as exc_info:

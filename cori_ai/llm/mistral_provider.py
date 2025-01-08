@@ -4,8 +4,8 @@ from typing import Optional
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_core.language_models.chat_models import BaseChatModel
 
-from otterai.core.config import settings
-from otterai.llm.base import BaseLLMProvider
+from cori_ai.core.config import settings
+from cori_ai.llm.base import BaseLLMProvider
 
 
 class MistralProvider(BaseLLMProvider):

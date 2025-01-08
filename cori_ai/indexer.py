@@ -1,4 +1,4 @@
-"""Code indexing and analysis module for OtterAI."""
+"""Code indexing and analysis module for cori_ai."""
 import os
 import fnmatch
 import json
@@ -96,8 +96,8 @@ class CodeIndexer:
             ("system",
              "You are a code analysis expert. Analyze the following codebase structure and provide detailed insights."),
             ("user",
-             "Project Structure:\n{index}\n\nKey Files:\n{key_files}\n\nProvide a comprehensive analysis following "
-             "the schema.")
+     cori_ai."Project Structure:\n{index}\n\nKey Files:\n{key_files}\n\nProvide a comprehensive analysis following "
+     cori_ai."the schema.")
         ])
 
         # Create dependency analysis prompt template

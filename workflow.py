@@ -1,5 +1,5 @@
 import asyncio
-from otterai.github.client import GitHubClient
+from cori_ai.github.client import GitHubClient
 
 async def stub_create_branch(owner: str, repo: str, branch: str, sha: str) -> str:
     """Stub for creating a new branch.

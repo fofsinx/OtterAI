@@ -1,4 +1,4 @@
-"""Configuration settings for OtterAI."""
+"""Configuration settings for cori_ai."""
 import os
 from typing import Dict, List, Optional, Union
 from pathlib import Path

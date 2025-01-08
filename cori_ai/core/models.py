@@ -1,4 +1,4 @@
-"""Core models for OtterAI."""
+"""Core models for cori_ai."""
 from typing import Any, Dict, List, Optional, Union, Set
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from enum import Enum

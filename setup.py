@@ -1,4 +1,4 @@
-"""Setup script for OtterAI."""
+"""Setup script for cori_ai."""
 from setuptools import setup, find_packages
 
 # Read long description from README
@@ -24,7 +24,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/harshvardhangoswami/otterai",
-    packages=find_packages(include=["otterai", "otterai.*"]),
+    packages=find_packages(include=["otterai", "cori_ai.*"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -45,7 +45,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "otterai=otterai.__main__:main",
+            "otterai=cori_ai.__main__:main",
         ],
     },
 ) 

@@ -1,12 +1,12 @@
-"""GitHub API client for OtterAI."""
+"""GitHub API client for cori_ai."""
 import re
 from typing import List, Dict, Any, Optional, AsyncGenerator
 import asyncio
 import base64
 from github import Github
-from otterai.core.exceptions import GitHubError, AuthenticationError
-from otterai.core.config import settings
-from otterai.core.models import PullRequestInfo, FileDiff
+from cori_ai.core.exceptions import GitHubError, AuthenticationError
+from cori_ai.core.config import settings
+from cori_ai.core.models import PullRequestInfo, FileDiff
 
 
 class GitHubClient:

@@ -1,4 +1,4 @@
-"""Review package for OtterAI."""
-from otterai.review.reviewer import CodeReviewer
+"""Review package for CoriAI."""
+from cori_ai.review.reviewer import CodeReviewer
 
 __all__ = ['CodeReviewer'] 

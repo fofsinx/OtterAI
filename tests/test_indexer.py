@@ -11,9 +11,9 @@ from langchain_core.documents import Document
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks import StdOutCallbackHandler
 
-from otterai.indexer import CodeIndexer, ProjectAnalysis, DependencyGraph
-from otterai.core.config import settings
-from otterai.core.models import DependencyGraph
+from cori_ai.indexer import CodeIndexer, ProjectAnalysis, DependencyGraph
+from cori_ai.core.config import settings
+from cori_ai.core.models import DependencyGraph
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def mock_settings(mock_callback_manager):
 @pytest.fixture
 def indexer(mock_provider, mock_callback_manager):
     """Fixture for CodeIndexer instance."""
-    with patch('otterai.llm.get_provider', return_value=mock_provider):
+    with patch('cori_ai.llm.get_provider', return_value=mock_provider):
         indexer = CodeIndexer(callback_manager=mock_callback_manager)
         indexer.llm = mock_provider  # Override the LLM directly
         indexer.analysis_chain = Mock()

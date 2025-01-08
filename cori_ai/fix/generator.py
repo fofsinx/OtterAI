@@ -1,12 +1,12 @@
-"""Fix generator module for OtterAI."""
+"""Fix generator module for cori_ai."""
 from typing import List, Dict, Any, Optional, AsyncGenerator
 import json
 
-from otterai.core.exceptions import FixGenerationError
-from otterai.core.config import settings
-from otterai.core.models import CodeFix, FileDiff
-from otterai.llm import get_provider
-from otterai.github import GitHubClient
+from cori_ai.core.exceptions import FixGenerationError
+from cori_ai.core.config import settings
+from cori_ai.core.models import CodeFix, FileDiff
+from cori_ai.llm import get_provider
+from cori_ai.github import GitHubClient
 
 
 class FixGenerator:

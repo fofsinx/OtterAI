@@ -266,7 +266,7 @@ The tool can be configured using environment variables with the `INPUT_` prefix:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/harshvardhangoswami/otterai.git
+   git clone https://github.com/harshvardhangoswami/cori_ai.git
    cd otterai
    ```
 

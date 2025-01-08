@@ -1,4 +1,4 @@
-"""GitHub package for OtterAI."""
-from otterai.github.client import GitHubClient
+"""GitHub package for cori_ai."""
+from cori_ai.github.client import GitHubClient
 
 __all__ = ['GitHubClient'] 

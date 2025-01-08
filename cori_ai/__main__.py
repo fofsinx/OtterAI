@@ -1,4 +1,4 @@
-"""Main entry point for OtterAI."""
+"""Main entry point for cori_ai."""
 import asyncio
 import logging
 import sys
@@ -7,10 +7,10 @@ import json
 import os
 import re
 
-from otterai.core.config import settings
-from otterai.github import GitHubClient
-from otterai.review import CodeReviewer
-from otterai.fix import FixGenerator
+from cori_ai.core.config import settings
+from cori_ai.github import GitHubClient
+from cori_ai.review import CodeReviewer
+from cori_ai.fix import FixGenerator
 
 
 async def create_fix_pr(
