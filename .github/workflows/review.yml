@@ -1,0 +1,44 @@
+name: OtterAI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    name: Review Pull Request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run code review
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          INPUT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_PROVIDER: openai
+          INPUT_MODEL: gpt-4-turbo-preview
+          INPUT_EXTRA_PROMPT: >
+            Focus on:
+            - Security vulnerabilities and best practices
+            - Performance optimizations
+            - Code quality and maintainability
+            - Test coverage and testing practices
+            - Documentation completeness
+        run: python -m otterai 

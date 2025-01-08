@@ -7,33 +7,34 @@ branding:
   color: 'purple'
 
 inputs:
+  pr_number:
+    description: 'Pull request number'
+    required: true
+  
   provider:
-    description: 'LLM provider to use (openai, gemini, groq, mistral, ollama)'
+    description: 'LLM provider to use (openai, gemini, groq, or mistral, or anthropic, or ollama)'
     required: false
     default: 'openai'
   
-  # OpenAI settings
   openai_api_key:
-    description: 'OpenAI API key (required if using OpenAI)'
+    description: 'OpenAI API key'
     required: false
+  
   openai_base_url:
-    description: 'OpenAI API base URL (optional)'
+    description: 'OpenAI API base URL'
     required: false
     default: 'https://api.openai.com/v1'
   
-  # Google Gemini settings
   google_api_key:
-    description: 'Google API key (required if using Gemini)'
+    description: 'Google API key'
     required: false
   
-  # Groq settings
   groq_api_key:
-    description: 'Groq API key (required if using Groq)'
+    description: 'Groq API key'
     required: false
   
-  # Mistral settings
   mistral_api_key:
-    description: 'Mistral API key (required if using Mistral)'
+    description: 'Mistral API key'
     required: false
   
   # Ollama settings
@@ -74,14 +75,24 @@ inputs:
     description: 'Author of the pull request'
     required: false
     default: ${{ github.event.pull_request.user.login }}
-  pr_number:
-    description: 'Number of the pull request'
-    required: false
-    default: ${{ github.event.number }}
   github_repository:
     description: 'Repository of the pull request'
     required: false
     default: ${{ github.repository }}
+  skip_fixes:
+    description: 'Skip fix generation'
+    required: false
+    default: 'false'
+  
+  skip_generated_pr_review:
+    description: 'Skip generated PR review'
+    required: false
+    default: 'true'
+  
+  log_level:
+    description: 'Logging level'
+    required: false
+    default: 'INFO'
 
 runs:
   using: 'composite'
@@ -107,8 +118,10 @@ runs:
         PR_DESCRIPTION: ${{ inputs.pr_description }}
         PR_STATE: ${{ inputs.pr_state }}
         MERGE_PATTERN: \b(?:merged|closed)\b
+        BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        BRANCH_NAME_PATTERN: \b(?:otterai/fixes-for-pr-\d+)\b
         SKIP_REVIEW_LABEL: ${{ steps.check_if_skip_review_label.outputs.SKIP_REVIEW_LABEL }}
-        PATTERN: \b((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|cori|coriai)|cori-(?:no|bye|restricted)))*\b
+        PATTERN: \b((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted))(?:,((?:no|skip)-(?:review|otter|otterai)|otter-(?:no|bye|restricted)))*\b
       run: |
         import os
         import re
@@ -118,8 +131,10 @@ runs:
         pr_description = os.environ['PR_DESCRIPTION']
         merge_pattern = os.environ['MERGE_PATTERN']
         pr_state = os.environ['PR_STATE']
+        branch_name = os.environ['BRANCH_NAME']
+        branch_name_pattern = os.environ['BRANCH_NAME_PATTERN']
 
-        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE) or os.environ.get('SKIP_REVIEW_LABEL', '1') == '0':
+        if re.search(pattern, pr_title, re.IGNORECASE) or re.search(merge_pattern, pr_state, re.IGNORECASE) or re.search(pattern, pr_description, re.IGNORECASE) or re.search(branch_name_pattern, branch_name, re.IGNORECASE) or os.environ.get('SKIP_REVIEW_LABEL', '1') == '0':
             print("🦦 No review requested, skipping code review")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("code_review_requested=false\n")
@@ -197,6 +212,8 @@ runs:
         echo "🎉 Code review complete! 🎉"
         echo "🐟 Fishy code review results! 🐟"
       env:
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
         INPUT_PROVIDER: ${{ inputs.provider }}
         INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         INPUT_OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
@@ -214,6 +231,10 @@ runs:
         PR_AUTHOR: ${{ inputs.pr_author }}
         PR_NUMBER: ${{ inputs.pr_number }}
         GITHUB_REPOSITORY: ${{ inputs.github_repository }}
+        GITHUB_EVENT_NUMBER: ${{ github.event.number }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}
+        INPUT_SKIP_FIXES: ${{ inputs.skip_fixes }}
+        INPUT_SKIP_GENERATED_PR_REVIEW: ${{ inputs.skip_generated_pr_review }}
 
     - name: Add a label to the PR if review is complete
       if: steps.check_if_review_requested.outputs.code_review_requested == 'true'
