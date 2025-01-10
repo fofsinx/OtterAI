@@ -55,12 +55,23 @@ jobs:
           model: gpt-4o-mini
           extra_prompt: |
             Please focus on:
-            - Python best practices and PEP8 compliance
-            - Security implications of the changes
-            - Performance optimizations
-            - Code maintainability and documentation
-            - Potential edge cases and error handling 
-            - Use emojis in your comments and be very specific.
-            - Use markdown in your comments.
-            - Use code blocks in your comments.
-            - Use inline code in your comments.
+            - 📝 Python best practices and PEP8 compliance
+            - 🔒 Security implications and vulnerability checks
+            - ⚡ Performance optimizations and resource efficiency
+            - 📚 Code maintainability, readability, and comprehensive documentation
+            - 🛡️ Robust error handling and edge case coverage
+            - 🧪 Unit test coverage and test quality
+            - 🔄 Code reusability and modularity
+            - 🎯 Type hints and input validation
+            - 💾 Database and I/O operations efficiency
+            - 🌐 API design and integration patterns
+            - 🚀 Scalability considerations
+            - 🔍 Memory management and resource cleanup
+            - 📊 Logging and monitoring practices
+            
+            Review Guidelines:
+            - Use descriptive emojis for better visibility
+            - Format comments using **bold**, *italic*, and `inline code`
+            - Include ```code blocks``` for suggested improvements
+            - Provide detailed explanations with examples
+            - Link to relevant documentation when applicable
