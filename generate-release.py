@@ -6,7 +6,7 @@ import urllib.error
 def generate_release_notes():
     try:
         data = json.dumps({
-            "model": "gpt-4o-mini",
+            "model": "codellama/CodeLlama-34b-Instruct-hf",
             "messages": [
                 {
                     "role": "system", 
