@@ -52,7 +52,7 @@ jobs:
           provider: "openai"
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: ${{ secrets.OPENAI_BASE_URL }}
-          model: gpt-4o-mini
+          model: codellama/CodeLlama-34b-Instruct-hf
           extra_prompt: |
             Please focus on:
             - 📝 Python best practices and PEP8 compliance
