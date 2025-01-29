@@ -395,6 +395,74 @@ def extract_additional_notes(body: str) -> str:
     """Extract additional notes."""
     return extract_section_content(body, "Additional Notes")
 
+def generate_pr_summary(pr_metadata: Dict[str, Any], diff_files: List[Dict[str, Any]]) -> str:
+    """🔍 Generate a comprehensive PR summary with mermaid diagrams."""
+    llm_client = LLMClient()
+    llm = llm_client.get_client()
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """Generate a comprehensive PR summary with the following sections:
+        1. 🎯 Overview - What the PR is trying to achieve
+        2. 🔄 Code Changes - Summary of main code changes
+        3. 🚨 Issues Found - Any potential issues or concerns
+        4. 📊 Flow Diagrams - Use mermaid syntax to create:
+           - Component interaction diagram
+           - Code flow diagram
+           - Data flow diagram (if applicable)
+        
+        Use markdown and mermaid syntax for diagrams. Be concise but informative.
+        Focus on the most important aspects of the changes."""),
+        ("human", """PR Metadata: {pr_metadata}
+        Files Changed: {diff_files}"""),
+    ])
+
+    summary = llm.invoke(prompt.format(pr_metadata=pr_metadata, diff_files=diff_files))
+    return summary.content
+
+def generate_review_summary(comments: List[CodeReviewComment], pr_metadata: Dict[str, Any], diff_files: List[Dict[str, Any]]) -> str:
+    """✨ Generate both review and PR summaries."""
+    llm_client = LLMClient()
+    llm = llm_client.get_client()
+
+    # Generate review comments summary
+    review_prompt = ChatPromptTemplate.from_messages([
+        ("system", """Generate a detailed summary of the code review comments.
+        Use markdown in your summary.
+        Use code blocks for code snippets.
+        Format as a list with categories:
+        
+        ## 🎯 Critical Issues
+        - [File Path] - [Line] - [Comment]
+        
+        ## 💡 Improvements
+        - [File Path] - [Line] - [Comment]
+        
+        ## ✨ Good Practices
+        - [File Path] - [Line] - [Comment]"""),
+        ("human", "Comments: {comments}"),
+    ])
+
+    review_summary = llm.invoke(review_prompt.format(comments=comments))
+    
+    # Generate PR summary with diagrams
+    pr_summary = generate_pr_summary(pr_metadata, diff_files)
+    
+    # Combine both summaries
+    combined_summary = f"""# 🦦 CoriAI Review Summary
+
+<details>
+<summary>📝 Review Comments</summary>
+{review_summary.content}
+</details>
+
+<details>
+<summary>🔍 Pull Request Analysis</summary>
+{pr_summary}
+</details>
+"""
+    
+    return combined_summary
+
 def main():
     """Main entry point for the GitHub Action."""
     github_token = os.getenv('INPUT_GITHUB_TOKEN')
@@ -468,33 +536,22 @@ def main():
 
     
     # generate a summary of the review
-    summary = generate_review_summary(comments)
+    summary = generate_review_summary(comments, pr_metadata, diff_files)
     pr.create_issue_comment(
         body=(
             f"Hey @{pr.user.login}! 👋\n\n"
-            f"Just wrapped up reviewing your code! Here's what I found:\n\n"
-            f"{summary}\n\n"
+            "<details>\n"
+            "<summary>📝 Code Review Summary</summary>\n\n"
+            f"{summary}\n"
+            "</details>\n\n"
             "Feel free to ping me if anything's not clear or if you want to chat about any of the suggestions! "
             "I'm here to help you ship awesome code! 🚀\n\n"
-            "Cheers! 🦦\n"
+            "Cheers! 🦦\n" 
             "~ CoriAI ✨"
         )
     )
     
     print("✨ Code review completed!")
-
-def generate_review_summary(comments: List[CodeReviewComment]) -> str:
-    """Generate a summary of the review."""
-    llm_client = LLMClient()
-    llm = llm_client.get_client()
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "Generate a summary of the code review done by CoriAI ✨. Use markdown in your summary. Use code blocks in your summary. Use inline code in your summary. Do not deviate from the summary format. Format your summary as a list of items with a - bullet point. Do not use any other formatting. This will be for the PR author to read."),
-        ("human", "Comments: {comments}"),
-    ])
-
-    summary = llm.invoke(prompt.format(comments=comments))
-    return summary.content
 
 if __name__ == "__main__":
     main() 
